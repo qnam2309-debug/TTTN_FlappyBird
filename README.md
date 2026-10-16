@@ -1,124 +1,124 @@
 # 🐦 Web Game Flappy Bird
 
-A web-based **Flappy Bird** game integrated with a **leaderboard system** and **user authentication** — developed as a university project.
+Trò chơi **Flappy Bird** chạy trên nền web, tích hợp **bảng xếp hạng** và **xác thực người dùng** — được phát triển cho đồ án đại học.
 
 ---
 
-## 📖 About The Project
+## 📖 Giới Thiệu Dự Án
 
-**Web Game Flappy Bird** is a modern, browser-based recreation of the classic Flappy Bird game. Players control a bird, tap or press a key to flap through pipes, and try to achieve the highest possible score.
+**Web Game Flappy Bird** là phiên bản hiện đại của trò chơi Flappy Bird kinh điển, chạy trực tiếp trên trình duyệt. Người chơi điều khiển chú chim, chạm hoặc nhấn phím để vỗ cánh bay qua các ống nước và cố gắng đạt điểm số cao nhất.
 
-The project combines an engaging front-end game with a fully functional back-end:
+Dự án kết hợp giữa giao diện trò chơi hấp dẫn và hệ thống backend hoàn chỉnh:
 
-- 🎮 **Frontend** — the playable game built with React and Canvas, featuring a coin economy, a bird-skin shop, and a leaderboard.
-- 🔐 **Backend** — a REST API that handles user authentication (register, login, logout, get user info) using JWT and bcrypt password hashing.
-- 🗄️ **Database** — a MySQL database that stores user accounts, owned skins, and game results.
+- 🎮 **Frontend** — trò chơi được xây dựng bằng React và Canvas, có hệ thống xu (coin), cửa hàng trang phục (skin) và bảng xếp hạng.
+- 🔐 **Backend** — REST API xử lý xác thực người dùng (đăng ký, đăng nhập, đăng xuất, lấy thông tin) sử dụng JWT và băm mật khẩu bằng bcrypt.
+- 🗄️ **Database** — cơ sở dữ liệu MySQL lưu tài khoản, trang phục đã sở hữu và kết quả các lượt chơi.
 
-The primary goal is to practice and demonstrate full-stack development skills: designing a database schema, building a secure authentication API, and connecting it to a polished front-end.
+Mục tiêu chính của dự án là thực hành và thể hiện kỹ năng lập trình full-stack: thiết kế cơ sở dữ liệu, xây dựng API xác thực bảo mật và kết nối với giao diện người dùng hoàn chỉnh.
 
 ---
 
-## 👥 Contributors
+## 👥 Thành Viên Thực Hiện
 
-| Name | Student ID |
-|------|------------|
+| Họ và Tên | MSSV |
+|-----------|------|
 | [Nguyen Van A] | [123456] |
 | [Tran Thi B] | [654321] |
 | [Le Van C] | [789012] |
 
-> ✏️ Replace the placeholders above with the real names and student IDs of your team members.
+> ✏️ Thay các nội dung trong ngoặc bằng tên và MSSV thật của các thành viên trong nhóm.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Công Nghệ Sử Dụng
 
 ### Frontend
-- ⚛️ **ReactJS** — UI framework
-- ⚡ **Vite** — build tool & dev server
-- 🎨 **Tailwind CSS** — styling
+- ⚛️ **ReactJS** — thư viện xây dựng giao diện
+- ⚡ **Vite** — công cụ build và dev server
+- 🎨 **Tailwind CSS** — thư viện CSS
 
 ### Backend
-- 🟢 **Node.js** — JavaScript runtime
+- 🟢 **Node.js** — môi trường chạy JavaScript
 - 🚂 **Express** — web framework (CommonJS)
-- 🔑 **JSON Web Token (JWT)** — authentication
-- 🔒 **bcryptjs** — password hashing
-- 📚 **Swagger UI** — API documentation & testing
+- 🔑 **JSON Web Token (JWT)** — xác thực người dùng
+- 🔒 **bcryptjs** — băm mật khẩu
+- 📚 **Swagger UI** — tài liệu và kiểm thử API
 
 ### Database
-- 🐬 **MySQL** — relational database (using a connection pool via `mysql2`)
+- 🐬 **MySQL** — cơ sở dữ liệu quan hệ (dùng connection pool qua `mysql2`)
 
 ---
 
-## ✨ Key Features
+## ✨ Các Chức Năng Chính
 
-- ✅ **Register** — create a new account (password is hashed with bcryptjs).
-- ✅ **Login** — authenticate with username/password and receive a JWT.
-- ✅ **Logout** — sign out of the current session.
-- ✅ **Get User Info** — retrieve the current user's profile (protected by JWT).
-- ✅ **Swagger UI** — interactive API documentation for testing the Auth endpoints.
+- ✅ **Đăng ký** — tạo tài khoản mới (mật khẩu được băm bằng bcryptjs).
+- ✅ **Đăng nhập** — xác thực bằng tên đăng nhập/mật khẩu và nhận JWT.
+- ✅ **Đăng xuất** — thoát khỏi phiên làm việc hiện tại.
+- ✅ **Lấy thông tin người dùng** — truy xuất thông tin tài khoản (bảo vệ bằng JWT).
+- ✅ **Swagger UI** — tài liệu API tương tác để kiểm thử các endpoint Auth.
 
 ---
 
-## 📁 Project Structure
+## 📁 Cấu Trúc Thư Mục
 
 ```
 TTTN_FlappyBird/
 ├── src/                        # Frontend (React + Vite)
-│   ├── components/             # Header, HUD, modals (Auth, Leaderboard, Shop)
-│   ├── context/                # AuthContext (authentication state)
-│   ├── game/                   # Game engine, drawing, game loop hook
-│   └── services/               # API service layer
-├── public/                     # Static assets (favicon, icons)
-├── index.html                  # HTML entry point
-├── vite.config.js              # Vite configuration
-├── package.json                # Frontend dependencies & scripts
+│   ├── components/             # Header, HUD, các modal (Auth, Leaderboard, Shop)
+│   ├── context/                # AuthContext (quản lý trạng thái xác thực)
+│   ├── game/                   # Game engine, vẽ canvas, hook game loop
+│   └── services/               # Lớp gọi API
+├── public/                     # Tài nguyên tĩnh (favicon, icons)
+├── index.html                  # Điểm vào HTML
+├── vite.config.js              # Cấu hình Vite
+├── package.json                # Dependencies & scripts của frontend
 └── backend/                    # Backend (Express + MySQL)
-    ├── index.js                # Entry point (routes, Swagger, error handling)
-    ├── swagger.js              # OpenAPI (Swagger) specification
-    ├── .env.example            # Environment configuration template
-    ├── config/db.js            # MySQL connection pool
-    ├── sql/schema.sql          # Database schema (tables & seed data)
-    ├── models/                 # User & Skin data access layer
-    ├── controllers/            # Business logic (auth)
-    ├── middleware/             # JWT authentication middleware
-    └── routes/                 # Route definitions
+    ├── index.js                # Entry point (route, Swagger, xử lý lỗi)
+    ├── swagger.js              # Cấu hình OpenAPI (Swagger)
+    ├── .env.example            # Mẫu cấu hình môi trường
+    ├── config/db.js            # Connection pool MySQL
+    ├── sql/schema.sql          # Script tạo database & bảng
+    ├── models/                 # Lớp truy xuất dữ liệu User & Skin
+    ├── controllers/            # Xử lý nghiệp vụ (auth)
+    ├── middleware/             # Middleware xác thực JWT
+    └── routes/                 # Định nghĩa các route
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Bắt Đầu
 
-### Prerequisites
+### Yêu Cầu
 
-Before you begin, make sure you have the following installed:
+Trước khi bắt đầu, hãy cài đặt:
 
-- **Node.js** (v18 or later) — [nodejs.org](https://nodejs.org)
-- **XAMPP** (or any MySQL server) — [apachefriends.org](https://www.apachefriends.org)
+- **Node.js** (phiên bản 18 trở lên) — [nodejs.org](https://nodejs.org)
+- **XAMPP** (hoặc bất kỳ máy chủ MySQL nào) — [apachefriends.org](https://www.apachefriends.org)
 
-### 1. Clone the repository
+### 1. Clone repository
 
 ```bash
 git clone https://github.com/qnam2309-debug/TTTN_FlappyBird.git
 cd TTTN_FlappyBird
 ```
 
-### 2. Backend setup
+### 2. Cài đặt Backend
 
 ```bash
-# Navigate to the backend folder
+# Chuyển vào thư mục backend
 cd backend
 
-# Install dependencies
+# Cài dependencies
 npm install
 
-# Create the .env file from the template
+# Tạo file .env từ file mẫu
 # (Windows PowerShell)
 Copy-Item .env.example .env
 # (Linux / macOS)
 cp .env.example .env
 ```
 
-Edit the `.env` file and fill in your database credentials:
+Sửa file `.env` và điền thông tin kết nối database:
 
 ```env
 PORT=5000
@@ -129,23 +129,23 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=TTTN_FlappyBird
 
-JWT_SECRET=replace_with_a_long_random_string
+JWT_SECRET=thay_bang_chuoi_ngau_nhien_dai
 JWT_EXPIRES_IN=7d
 ```
 
-> ⚠️ **Important:** Never commit the real `.env` file to Git. Only `.env.example` should be tracked.
+> ⚠️ **Lưu ý:** Không commit file `.env` thật lên Git. Chỉ commit `.env.example`.
 
-Import the database schema (`backend/sql/schema.sql`):
+Import cấu trúc database (`backend/sql/schema.sql`):
 
-- **Option A — phpMyAdmin:** open `http://localhost/phpmyadmin`, then **Import** the `sql/schema.sql` file.
-- **Option B — Command line:**
+- **Cách A — phpMyAdmin:** mở `http://localhost/phpmyadmin`, chọn **Import** và tải file `sql/schema.sql`.
+- **Cách B — Dòng lệnh:**
   ```bash
   "C:\xampp\mysql\bin\mysql.exe" -u root < sql/schema.sql
   ```
 
-### 3. Frontend setup
+### 3. Cài đặt Frontend
 
-Open a new terminal **in the project root** and run:
+Mở một terminal mới **tại thư mục gốc của dự án** và chạy:
 
 ```bash
 npm install
@@ -153,75 +153,75 @@ npm install
 
 ---
 
-## 💻 Usage
+## 💻 Cách Chạy
 
-Run the **backend** server (from the `backend` folder):
+Chạy **backend** (từ thư mục `backend`):
 
 ```bash
 cd backend
 npm run dev
-# or: npm start
+# hoặc: npm start
 ```
 
-Run the **frontend** dev server (from the project root):
+Chạy **frontend** (từ thư mục gốc của dự án):
 
 ```bash
 npm run dev
 ```
 
-| Service | URL |
-|---------|-----|
+| Thành phần | URL |
+|------------|-----|
 | Frontend (Vite) | http://localhost:5173 |
 | Backend (Express) | http://localhost:5000 |
 | Swagger UI | http://localhost:5000/api-docs |
 
-> 💡 Vite prints the exact frontend URL in the terminal when it starts (the default is `http://localhost:5173`).
+> 💡 Vite sẽ in ra URL chính xác của frontend khi khởi động (mặc định là `http://localhost:5173`).
 
 ---
 
-## 📚 API Documentation
+## 📚 Tài Liệu API (Swagger)
 
-The backend exposes interactive API documentation via **Swagger UI**.
+Backend cung cấp tài liệu API tương tác thông qua **Swagger UI**.
 
-1. Start the backend server.
-2. Open your browser and go to: **http://localhost:5000/api-docs**
-3. Test the Auth APIs directly from the interface.
+1. Khởi động backend.
+2. Mở trình duyệt và truy cập: **http://localhost:5000/api-docs**
+3. Kiểm thử các API Auth trực tiếp trên giao diện.
 
-### Available Auth Endpoints
+### Các Endpoint Auth
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/api/auth/register` | Register a new account | ❌ |
-| `POST` | `/api/auth/login` | Log in and receive a JWT | ❌ |
-| `GET` | `/api/auth/me` | Get the current user's info | ✅ Bearer token |
-| `POST` | `/api/auth/logout` | Log out | ❌ |
+| Method | Endpoint | Mô tả | Xác thực |
+|--------|----------|-------|----------|
+| `POST` | `/api/auth/register` | Đăng ký tài khoản mới | ❌ |
+| `POST` | `/api/auth/login` | Đăng nhập và nhận JWT | ❌ |
+| `GET` | `/api/auth/me` | Lấy thông tin người dùng hiện tại | ✅ Bearer token |
+| `POST` | `/api/auth/logout` | Đăng xuất | ❌ |
 
-### Testing with Swagger
+### Hướng dẫn test bằng Swagger
 
-1. Call **`POST /api/auth/register`** → click **Try it out** → enter a `username` and `password` → **Execute** → copy the returned `token`.
-2. Click the **🔒 Authorize** button (top-right) → paste the `token` → **Authorize**.
-3. Call **`GET /api/auth/me`** to retrieve the current user's information.
-4. Test error cases as well: duplicate username (`409`), wrong password (`401`), missing token (`401`).
+1. Gọi **`POST /api/auth/register`** → bấm **Try it out** → nhập `username` và `password` → **Execute** → copy `token` trả về.
+2. Bấm nút **🔒 Authorize** (góc trên bên phải) → dán `token` → **Authorize**.
+3. Gọi **`GET /api/auth/me`** để lấy thông tin người dùng.
+4. Test thêm các trường hợp lỗi: đăng ký trùng tên (`409`), sai mật khẩu (`401`), thiếu token (`401`).
 
-> 📄 A raw OpenAPI JSON specification is also available at: **http://localhost:5000/api-docs.json**
-
----
-
-## 🗄️ Database Schema
-
-Database name: **`TTTN_FlappyBird`**
-
-| Table | Primary Key | Foreign Key | Description |
-|-------|-------------|-------------|-------------|
-| `SKINS` | `SkinID` | — | Bird skin catalog |
-| `USERS` | `UserID` | `CurrentSkinID` → `SKINS.SkinID` | Player accounts |
-| `USER_SKINS` | (`UserID`, `SkinID`) | → `USERS`, → `SKINS` | Owned skins (many-to-many) |
-| `GAME_RESULTS` | `ResultID` | `UserID` → `USERS.UserID` | Individual game results |
-
-The full schema (columns, constraints, and indexes) is available in [`backend/sql/schema.sql`](backend/sql/schema.sql).
+> 📄 File spec OpenAPI (JSON) cũng có tại: **http://localhost:5000/api-docs.json**
 
 ---
 
-## 📄 License
+## 🗄️ Cấu Trúc Database
 
-This project is developed for educational purposes as part of a university course.
+Tên database: **`TTTN_FlappyBird`**
+
+| Bảng | Khóa chính | Khóa ngoại | Mô tả |
+|------|------------|------------|-------|
+| `SKINS` | `SkinID` | — | Danh mục trang phục |
+| `USERS` | `UserID` | `CurrentSkinID` → `SKINS.SkinID` | Tài khoản người chơi |
+| `USER_SKINS` | (`UserID`, `SkinID`) | → `USERS`, → `SKINS` | Trang phục đã sở hữu (n-n) |
+| `GAME_RESULTS` | `ResultID` | `UserID` → `USERS.UserID` | Kết quả từng lượt chơi |
+
+Cấu trúc chi tiết (cột, ràng buộc và index) nằm trong file [`backend/sql/schema.sql`](backend/sql/schema.sql).
+
+---
+
+## 📄 Giấy Phép
+
+Dự án được phát triển cho mục đích học tập trong khuôn khổ môn học tại trường đại học.
