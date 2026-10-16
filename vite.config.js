@@ -8,5 +8,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    port: 5500,
+    strictPort: true,
+    // Chuyển mọi request /api sang backend (Express chạy ở cổng 3000)
+    proxy: { '/api': 'http://localhost:3000' },
+  },
 })
-

@@ -1,116 +1,43 @@
-// D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\App.jsx
-// Màn hình chính liên kết Game Loop, Canvas, Header, HUD và các Modal
-
-import { useEffect, useRef, useState } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-import Header from './components/Header.jsx';
-import Hud from './components/Hud.jsx';
-import AuthModal from './components/AuthModal.jsx';
-import LeaderboardModal from './components/LeaderboardModal.jsx';
-import ShopModal from './components/ShopModal.jsx';
-import { H, W } from './game/game.js';
-import { useGame } from './game/useGame.js';
-
-function GameScreen() {
-  const stageRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  // Quản lý trạng thái mở/đóng các Modal
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false);
-
-  // Tỉ lệ scale màn hình Canvas
-  const [scale, setScale] = useState(1);
-
-  // Lấy dữ liệu tài khoản và trang phục đang mặc
-  const { activeSkinColors, submitScore } = useAuth();
-
-  // Xử lý khi chim chết (kết thúc ván)
-  const handleGameOver = async (finalScore) => {
-    try {
-      await submitScore(finalScore);
-    } catch (err) {
-      console.error('Lỗi lưu điểm:', err);
-    }
-  };
-
-  // Khởi tạo Game Loop Canvas
-  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver);
-
-  // Tự động tính toán scale màn hình để fit vừa vặn mọi kích thước
-  useEffect(() => {
-    const el = stageRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => {
-      const padding = 16;
-      const availableW = el.clientWidth - padding;
-      const availableH = el.clientHeight - padding;
-      const newScale = Math.min(availableW / W, availableH / H, 1.25);
-      setScale(Math.max(newScale, 0.5));
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const pixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-  const playfieldWidth = Math.round(W * scale);
-  const playfieldHeight = Math.round(H * scale);
-
-  return (
-    <div className="flex h-screen w-screen flex-col items-center justify-between bg-slate-950 p-2 sm:p-4 select-none touch-none overflow-hidden">
-      {/* 1. Header trên cùng */}
-      <Header
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        onOpenShop={() => setIsShopOpen(true)}
-      />
-
-      {/* 2. Khung chơi Game (Sân khấu trung tâm) */}
-      <div
-        ref={stageRef}
-        className="flex flex-1 w-full items-center justify-center cursor-pointer"
-        onPointerDown={(e) => {
-          // Bấm chuột trái hoặc chạm màn hình để bay
-          if (e.button === 0) flap();
-        }}
-      >
-        <div
-          className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-800 bg-sky-200"
-          style={{ width: `${playfieldWidth}px`, height: `${playfieldHeight}px` }}
-        >
-          {/* Canvas vẽ game */}
-          <canvas
-            ref={canvasRef}
-            width={Math.round(W * scale * pixelRatio)}
-            height={Math.round(H * scale * pixelRatio)}
-            className="block w-full h-full"
-          />
-
-          {/* Lớp HUD hiển thị điểm & Game Over */}
-          <Hud {...hud} />
-        </div>
-      </div>
-
-      {/* 3. Dòng nhắc nhở bên dưới */}
-      <footer className="text-center pb-1">
-        <p className="text-xs text-slate-500 font-medium">
-          Chạm vào màn hình hoặc bấm <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">Space</kbd> / <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">↑</kbd> để đập cánh
-        </p>
-      </footer>
-
-      {/* 4. Các Popup Modal */}
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-      <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
-      <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
-    </div>
-  );
-}
+import { useCallback, useState } from 'react'
+import { clearSession, loadUser } from './api'
+import AuthScreen from './components/AuthScreen'
+import Game from './components/Game'
+import Leaderboard from './components/Leaderboard'
+import Skins from './components/Skins'
 
 export default function App() {
+  const [user, setUser] = useState(loadUser)
+  const [screen, setScreen] = useState('menu') // menu | play | leaderboard | skins
+
+  const logout = useCallback(() => {
+    clearSession()
+    setUser(null)
+    setScreen('menu')
+  }, [])
+  const toMenu = useCallback(() => setScreen('menu'), [])
+
+  const btn = 'w-full rounded-xl py-3 text-lg font-bold transition'
+
   return (
-    <AuthProvider>
-      <GameScreen />
-    </AuthProvider>
-  );
+    <div className="flex min-h-full flex-col items-center justify-center bg-gradient-to-b from-sky-500 to-sky-800 p-4">
+      {!user ? (
+        <AuthScreen onAuthed={setUser} />
+      ) : screen === 'play' ? (
+        <Game onExit={toMenu} onUnauthorized={logout} />
+      ) : screen === 'leaderboard' ? (
+        <Leaderboard onBack={toMenu} onUnauthorized={logout} />
+      ) : screen === 'skins' ? (
+        <Skins onBack={toMenu} onUnauthorized={logout} />
+      ) : (
+        <div className="w-full max-w-sm space-y-3 rounded-2xl bg-black/30 p-6 text-center text-white backdrop-blur">
+          <h1 className="text-4xl font-extrabold text-yellow-300">🐤 Flappy Bird</h1>
+          <p className="pb-2 text-white/80">Xin chào, <b>{user.username}</b>!</p>
+          <button onClick={() => setScreen('play')} className={`${btn} bg-yellow-400 text-slate-900 hover:bg-yellow-300`}>▶ Chơi</button>
+          <button onClick={() => setScreen('leaderboard')} className={`${btn} bg-white/15 hover:bg-white/25`}>🏆 Bảng xếp hạng</button>
+          <button onClick={() => setScreen('skins')} className={`${btn} bg-white/15 hover:bg-white/25`}>🎨 Skin</button>
+          <button onClick={logout} className="pt-2 text-sm text-white/70 underline">Đăng xuất</button>
+        </div>
+      )}
+    </div>
+  )
 }
