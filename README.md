@@ -1,4 +1,4 @@
-# 🐦 Web Game Flappy Bird
+# 🐤 Web Game Flappy Bird
 
 Trò chơi **Flappy Bird** chạy trên nền web, tích hợp **bảng xếp hạng** và **xác thực người dùng** — được phát triển cho đồ án đại học.
 
@@ -22,9 +22,9 @@ Mục tiêu chính của dự án là thực hành và thể hiện kỹ năng l
 
 | Họ và Tên | MSSV |
 |-----------|------|
-| [Nguyen Van A] | [123456] |
-| [Tran Thi B] | [654321] |
-| [Le Van C] | [789012] |
+| [Phan Thúy Vy] | [231A290028] |
+| [Nguyễn Đức Hưng] | [231A010791] |
+| Quang Dũng Nam] | [231A290008] |
 
 > ✏️ Thay các nội dung trong ngoặc bằng tên và MSSV thật của các thành viên trong nhóm.
 
@@ -222,6 +222,4 @@ Cấu trúc chi tiết (cột, ràng buộc và index) nằm trong file [`backen
 
 ---
 
-## 📄 Giấy Phép
 
-Dự án được phát triển cho mục đích học tập trong khuôn khổ môn học tại trường đại học.
