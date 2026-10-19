@@ -12,6 +12,7 @@ function toPublic(row) {
     username: row.Username,
     coins: row.Coins,
     currentSkinId: row.CurrentSkinID,
+    bestScore: Number(row.BestScore) || 0,
     createdAt: row.CreatedAt,
   };
 }
@@ -28,7 +29,11 @@ async function createUser({ username, passwordHash, coins = 0, currentSkinId = n
 // Tìm user theo username (dùng cho đăng nhập + kiểm tra trùng khi đăng ký)
 async function findByUsername(username) {
   const [rows] = await db.execute(
-    'SELECT * FROM USERS WHERE Username = ? LIMIT 1',
+    `SELECT USERS.*,
+      (SELECT COALESCE(MAX(GAME_RESULTS.Score), 0)
+       FROM GAME_RESULTS
+       WHERE GAME_RESULTS.UserID = USERS.UserID) AS BestScore
+     FROM USERS WHERE Username = ? LIMIT 1`,
     [username]
   );
   return rows[0] || null;
@@ -37,7 +42,11 @@ async function findByUsername(username) {
 // Tìm user theo id (dùng cho GET /me)
 async function findById(id) {
   const [rows] = await db.execute(
-    'SELECT * FROM USERS WHERE UserID = ? LIMIT 1',
+    `SELECT USERS.*,
+      (SELECT COALESCE(MAX(GAME_RESULTS.Score), 0)
+       FROM GAME_RESULTS
+       WHERE GAME_RESULTS.UserID = USERS.UserID) AS BestScore
+     FROM USERS WHERE UserID = ? LIMIT 1`,
     [id]
   );
   return rows[0] || null;

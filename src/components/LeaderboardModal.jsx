@@ -3,26 +3,34 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { mockGetLeaderboard } from '../services/mockApi.js';
+import { gameApi } from '../services/api.js';
 
 export default function LeaderboardModal({ isOpen, onClose }) {
   const { user, isGuest } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let active = true;
     if (isOpen) {
-      mockGetLeaderboard()
+      gameApi.getLeaderboard()
         .then((data) => {
+          if (!Array.isArray(data?.leaderboard)) {
+            throw new Error('Dữ liệu bảng xếp hạng từ máy chủ không hợp lệ.');
+          }
           if (active) {
-            setLeaderboard(data);
+            setLoadError('');
+            setLeaderboard(data.leaderboard);
             setLoading(false);
           }
         })
         .catch((err) => {
           console.error('Lỗi lấy leaderboard:', err);
-          if (active) setLoading(false);
+          if (active) {
+            setLoadError(err.message || 'Không thể tải bảng xếp hạng.');
+            setLoading(false);
+          }
         });
     }
     return () => {
@@ -55,13 +63,17 @@ export default function LeaderboardModal({ isOpen, onClose }) {
             <div className="py-12 text-center text-slate-400 text-sm">
               Đang tải bảng xếp hạng...
             </div>
+          ) : loadError ? (
+            <div className="py-12 text-center text-rose-400 text-sm">
+              {loadError}
+            </div>
           ) : leaderboard.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-sm">
               Chưa có dữ liệu bảng xếp hạng.
             </div>
           ) : (
             leaderboard.map((item) => {
-              const isCurrentUser = user && user.id === item.id;
+              const isCurrentUser = user && user.username === item.username;
               return (
                 <div
                   key={item.id}

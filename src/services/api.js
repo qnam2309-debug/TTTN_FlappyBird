@@ -1,89 +1,106 @@
-// D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\services\api.js
-// Tầng Service gọi API tập trung: Tự động đính kèm Token và xử lý lỗi
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+const TOKEN_KEY = 'flappy_token';
+const USER_KEY = 'flappy_user';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
 
-/**
- * Hàm gọi API tổng quát (dùng chung cho mọi API của nhóm)
- * @param {string} endpoint - Ví dụ: '/auth/login', '/scores', '/leaderboard'
- * @param {RequestInit} options - Phương thức GET, POST, body,...
- */
-export async function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem('flappy_token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+function saveSession(token, user) {
+  if (typeof token !== 'string' || !token || !user?.id || !user?.username) {
+    throw new Error('Phản hồi đăng nhập từ máy chủ không hợp lệ.');
+  }
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+export function clearSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
 
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.message || `Lỗi máy chủ (${response.status})`);
+function normalizeUser(user) {
+  if (!user || user.id === undefined || typeof user.username !== 'string') {
+    throw new Error('Máy chủ trả về thông tin người dùng không hợp lệ.');
   }
 
+  const activeSkin = user.currentSkinId || user.activeSkin || 'default';
+  return {
+    ...user,
+    id: String(user.id),
+    currentSkinId: activeSkin,
+    activeSkin,
+    bestScore: Number(user.bestScore) || 0,
+  };
+}
+
+export async function apiRequest(endpoint, options = {}) {
+  const { authenticated = true, ...requestOptions } = options;
+  const token = authenticated ? getToken() : null;
+  const headers = {
+    ...(requestOptions.body !== undefined && { 'Content-Type': 'application/json' }),
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...requestOptions.headers,
+  };
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...requestOptions,
+      headers,
+    });
+  } catch (cause) {
+    const error = new Error('Không thể kết nối tới máy chủ.');
+    error.cause = cause;
+    throw error;
+  }
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(data?.message || `Yêu cầu API thất bại (${response.status}).`);
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 
-// 1. Nhóm API Xác thực người dùng (Auth) - Backend của Vy
+async function authenticate(endpoint, username, password) {
+  const data = await apiRequest(endpoint, {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+    authenticated: false,
+  });
+  const user = normalizeUser(data?.user);
+  saveSession(data?.token, user);
+  return { ...data, token: data.token, user };
+}
+
 export const authApi = {
-  // Đăng ký tài khoản mới (POST /api/auth/register)
-  register: async (username, password) => {
-    return apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-  },
-
-  // Đăng nhập (POST /api/auth/login)
-  login: async (username, password) => {
-    return apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-  },
-
-  // Lấy thông tin tài khoản hiện tại qua JWT (GET /api/auth/me)
+  register: (username, password) => authenticate('/auth/register', username, password),
+  login: (username, password) => authenticate('/auth/login', username, password),
   getCurrentUser: async () => {
-    return apiRequest('/auth/me');
+    if (!getToken()) return null;
+    const data = await apiRequest('/auth/me');
+    const user = normalizeUser(data?.user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    return { ...data, user };
   },
-
-  // Đăng xuất (POST /api/auth/logout)
   logout: async () => {
-    return apiRequest('/auth/logout', { method: 'POST' });
+    clearSession();
   },
 };
 
-// 2. Nhóm API Gameplay (Lưu điểm, BXH, Skins) - Sẵn sàng nối khi Hưng hoàn thành
 export const gameApi = {
-  // Gửi điểm ván chơi (POST /api/scores)
-  submitScore: async (score) => {
-    return apiRequest('/scores', {
-      method: 'POST',
-      body: JSON.stringify({ score }),
-    });
-  },
-
-  // Lấy bảng xếp hạng (GET /api/leaderboard?limit=10)
-  getLeaderboard: async (limit = 10) => {
-    return apiRequest(`/leaderboard?limit=${limit}`);
-  },
-
-  // Lấy danh sách skin và trạng thái sở hữu (GET /api/skins)
-  getSkins: async () => {
-    return apiRequest('/skins');
-  },
-
-  // Trang bị skin (POST /api/skins/equip)
-  equipSkin: async (skinId) => {
-    return apiRequest('/skins/equip', {
-      method: 'POST',
-      body: JSON.stringify({ skinId }),
-    });
-  },
+  submitScore: (score) => apiRequest('/scores', {
+    method: 'POST',
+    body: JSON.stringify({ score }),
+  }),
+  getLeaderboard: (limit = 10) => apiRequest(`/leaderboard?limit=${limit}`, {
+    authenticated: false,
+  }),
+  getSkins: () => apiRequest('/skins'),
+  equipSkin: (skinId) => apiRequest('/skins/equip', {
+    method: 'POST',
+    body: JSON.stringify({ skinId }),
+  }),
 };

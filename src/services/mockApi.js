@@ -67,6 +67,37 @@ function saveUsers(users) {
   localStorage.setItem('flappy_users', JSON.stringify(users));
 }
 
+export function mockSyncAuthenticatedUser(user) {
+  const users = getUsers();
+  const userIndex = users.findIndex(
+    (storedUser) => String(storedUser.id) === String(user.id)
+      || storedUser.username.toLowerCase() === user.username.toLowerCase()
+  );
+  const existingUser = userIndex >= 0 ? users[userIndex] : null;
+  const shopUser = {
+    ...existingUser,
+    id: user.id,
+    username: user.username,
+    bestScore: Number(user.bestScore) || existingUser?.bestScore || 0,
+    coins: Number.isFinite(user.coins) ? user.coins : existingUser?.coins || 0,
+    ownedSkins: existingUser?.ownedSkins || ['default'],
+    activeSkin: existingUser?.activeSkin || user.activeSkin || user.currentSkinId || 'default',
+  };
+
+  if (userIndex >= 0) {
+    users[userIndex] = shopUser;
+  } else {
+    users.push(shopUser);
+  }
+  saveUsers(users);
+  localStorage.setItem('flappy_active_user', JSON.stringify(shopUser));
+  return shopUser;
+}
+
+export function mockClearActiveUser() {
+  localStorage.removeItem('flappy_active_user');
+}
+
 // 1. API Đăng Ký
 export async function mockRegister({ username, password }) {
   await delay();

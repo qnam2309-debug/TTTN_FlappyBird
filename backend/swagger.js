@@ -8,17 +8,19 @@ module.exports = {
     title: 'Flappy Bird API',
     version: '1.0.0',
     description:
-      'Tài liệu API Backend Flappy Bird — Phần Authentication & User.\n\n' +
+      'Tài liệu API Backend Flappy Bird — xác thực, lưu điểm và bảng xếp hạng.\n\n' +
       'Quy trình test:\n' +
       '1. Dùng `POST /api/auth/register` để tạo tài khoản (nhận token).\n' +
       '2. Bấm nút **Authorize** (🔒) và dán token vừa nhận.\n' +
-      '3. Gọi `GET /api/auth/me` để lấy thông tin người dùng.',
+      '3. Gọi `GET /api/auth/me` để lấy thông tin người dùng.\n' +
+      '4. Gọi `POST /api/scores` để lưu điểm hoặc `GET /api/leaderboard` để xem bảng xếp hạng.',
   },
   servers: [
     { url: 'http://localhost:5000', description: 'Máy chủ local (XAMPP + Express)' },
   ],
   tags: [
     { name: 'Auth', description: 'Đăng ký, đăng nhập, thông tin người dùng' },
+    { name: 'Game', description: 'Lưu điểm và bảng xếp hạng' },
   ],
   components: {
     securitySchemes: {
@@ -37,7 +39,42 @@ module.exports = {
           username: { type: 'string', example: 'player1' },
           coins: { type: 'integer', example: 50 },
           currentSkinId: { type: 'integer', example: 1, nullable: true },
+          bestScore: { type: 'integer', example: 12 },
           createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ScoreRequest: {
+        type: 'object',
+        required: ['score'],
+        properties: {
+          score: { type: 'integer', minimum: 0, example: 12 },
+        },
+      },
+      ScoreResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          score: { type: 'integer', example: 12 },
+          bestScore: { type: 'integer', example: 12 },
+          newRecord: { type: 'boolean', example: true },
+        },
+      },
+      LeaderboardResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          leaderboard: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                rank: { type: 'integer', example: 1 },
+                id: { type: 'string', example: '1' },
+                username: { type: 'string', example: 'player1' },
+                bestScore: { type: 'integer', example: 12 },
+              },
+            },
+          },
         },
       },
       LoginRequest: {
@@ -184,6 +221,72 @@ module.exports = {
                     message: { type: 'string', example: 'Đăng xuất thành công!' },
                   },
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/scores': {
+      post: {
+        tags: ['Game'],
+        summary: 'Lưu điểm một ván chơi',
+        description: 'Cần JWT. Điểm cao nhất tài khoản được trả về cùng phản hồi.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ScoreRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Đã lưu điểm',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ScoreResponse' },
+              },
+            },
+          },
+          400: {
+            description: 'Điểm không hợp lệ',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          401: {
+            description: 'Chưa đăng nhập / token không hợp lệ',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/leaderboard': {
+      get: {
+        tags: ['Game'],
+        summary: 'Lấy bảng xếp hạng',
+        parameters: [
+          {
+            name: 'limit',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Bảng xếp hạng điểm cao nhất',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/LeaderboardResponse' },
               },
             },
           },
