@@ -3,14 +3,11 @@
 // Quản lý trạng thái xác thực: Người dùng đăng nhập vs Khách (Guest) và Skin chim
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { authApi } from '../services/api.js';
 import {
   AVAILABLE_SKINS,
   mockBuySkin,
   mockEquipSkin,
-  mockGetCurrentUser,
-  mockLogin,
-  mockLogout,
-  mockRegister,
   mockSaveScore,
 } from '../services/mockApi.js';
 
@@ -20,14 +17,26 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Khôi phục phiên đăng nhập khi mở lại web
+  // Khôi phục phiên đăng nhập khi mở lại web từ Backend thật qua JWT
   useEffect(() => {
     async function loadUser() {
+      const token = localStorage.getItem('flappy_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
-        const currentUser = await mockGetCurrentUser();
-        setUser(currentUser);
+        const res = await authApi.getCurrentUser();
+        if (res.success && res.user) {
+          setUser({
+            ...res.user,
+            activeSkin: res.user.currentSkinId || 'default',
+          });
+        }
       } catch (err) {
-        console.error('Lỗi tải phiên đăng nhập:', err);
+        console.error('Phiên đăng nhập hết hạn hoặc không hợp lệ:', err);
+        localStorage.removeItem('flappy_token');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -35,23 +44,42 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  // Đăng nhập
+  // Đăng nhập qua Backend thật
   const login = async (username, password) => {
-    const res = await mockLogin({ username, password });
-    setUser(res.user);
-    return res.user;
+    const res = await authApi.login(username, password);
+    if (res.token) {
+      localStorage.setItem('flappy_token', res.token);
+    }
+    const loggedInUser = {
+      ...res.user,
+      activeSkin: res.user.currentSkinId || 'default',
+    };
+    setUser(loggedInUser);
+    return loggedInUser;
   };
 
-  // Đăng ký
+  // Đăng ký qua Backend thật
   const register = async (username, password) => {
-    const res = await mockRegister({ username, password });
-    setUser(res.user);
-    return res.user;
+    const res = await authApi.register(username, password);
+    if (res.token) {
+      localStorage.setItem('flappy_token', res.token);
+    }
+    const newUser = {
+      ...res.user,
+      activeSkin: res.user.currentSkinId || 'default',
+    };
+    setUser(newUser);
+    return newUser;
   };
 
-  // Đăng xuất -> chuyển về chế độ Guest
+  // Đăng xuất
   const logout = async () => {
-    await mockLogout();
+    try {
+      await authApi.logout();
+    } catch {
+      // Bỏ qua lỗi mạng khi logout
+    }
+    localStorage.removeItem('flappy_token');
     setUser(null);
   };
 

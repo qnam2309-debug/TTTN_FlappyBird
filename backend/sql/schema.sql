@@ -89,12 +89,7 @@ CREATE TABLE IF NOT EXISTS GAME_RESULTS (
         REFERENCES USERS (UserID)
         ON DELETE SET NULL,
     CONSTRAINT CK_GAME_RESULTS_Score CHECK (Score >= 0),
-    CONSTRAINT CK_GAME_RESULTS_Duration CHECK (DurationSeconds >= 0),
-    CONSTRAINT CK_GAME_RESULTS_Owner CHECK (
-        (UserID IS NOT NULL AND GuestSessionID IS NULL)
-        OR
-        (UserID IS NULL AND GuestSessionID IS NOT NULL)
-    )
+    CONSTRAINT CK_GAME_RESULTS_Duration CHECK (DurationSeconds >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
@@ -107,7 +102,12 @@ CREATE INDEX IX_GAME_RESULTS_Score_Time
     ON GAME_RESULTS (Score DESC, PlayedAt ASC);
 
 -- ============================================
--- 7. DU LIEU TRANG PHUC MAC DINH
+-- 7. DU LIEU TRANG PHUC MAC DINH VA TRANG PHUC CUA HANG
 -- ============================================
 INSERT IGNORE INTO SKINS (SkinCode, SkinName, ImageURL, Price)
-VALUES ('default', 'Mặc định', 'images/skins/default.png', 0);
+VALUES 
+    ('default', 'Mặc định', 'images/skins/default.png', 0),
+    ('blue', 'Chim Xanh Đại Dương', 'images/skins/blue.png', 15),
+    ('red', 'Phượng Hoàng Đỏ', 'images/skins/red.png', 30),
+    ('gold', 'Hoàng Kim Vua', 'images/skins/gold.png', 50),
+    ('shadow', 'Bóng Đêm', 'images/skins/shadow.png', 80);
