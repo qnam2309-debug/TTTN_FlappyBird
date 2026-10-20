@@ -21,6 +21,7 @@ module.exports = {
   tags: [
     { name: 'Auth', description: 'Đăng ký, đăng nhập, thông tin người dùng' },
     { name: 'Game', description: 'Lưu điểm và bảng xếp hạng' },
+    { name: 'Shop', description: 'Cửa hàng trang phục và quản lý xu' },
   ],
   components: {
     securitySchemes: {
@@ -289,6 +290,149 @@ module.exports = {
                 schema: { $ref: '#/components/schemas/LeaderboardResponse' },
               },
             },
+          },
+        },
+      },
+    },
+    '/api/coins': {
+      post: {
+        tags: ['Shop'],
+        summary: 'Cập nhật số xu',
+        description: 'Cần JWT. Thêm hoặc trừ xu cho tài khoản đang đăng nhập.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['amount'],
+                properties: {
+                  amount: { type: 'integer', example: 10, description: 'Số xu thay đổi (dương = cộng, âm = trừ)' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Cập nhật xu thành công',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Cập nhật xu thành công!' },
+                    coins: { type: 'integer', example: 60 },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Dữ liệu không hợp lệ',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+          401: {
+            description: 'Chưa đăng nhập / token không hợp lệ',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+        },
+      },
+    },
+    '/api/skins/buy': {
+      post: {
+        tags: ['Shop'],
+        summary: 'Mua trang phục bằng xu',
+        description: 'Cần JWT. Kiểm tra số dư xu, trừ xu và thêm trang phục vào danh sách sở hữu.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['skinCode'],
+                properties: {
+                  skinCode: { type: 'string', example: 'blue', description: 'Mã trang phục cần mua' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Mua trang phục thành công',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Mua trang phục thành công!' },
+                    coins: { type: 'integer', example: 35 },
+                    activeSkin: { type: 'string', example: 'blue' },
+                    ownedSkins: { type: 'array', items: { type: 'string' }, example: ['default', 'blue'] },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Không đủ xu hoặc đã sở hữu',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+          404: {
+            description: 'Trang phục không tồn tại',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+        },
+      },
+    },
+    '/api/skins/equip': {
+      post: {
+        tags: ['Shop'],
+        summary: 'Trang bị trang phục đã sở hữu',
+        description: 'Cần JWT. Đổi trang phục đang mặc sang trang phục đã sở hữu.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['skinCode'],
+                properties: {
+                  skinCode: { type: 'string', example: 'blue', description: 'Mã trang phục cần trang bị' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Trang bị thành công',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Trang bị thành công!' },
+                    activeSkin: { type: 'string', example: 'blue' },
+                  },
+                },
+              },
+            },
+          },
+          403: {
+            description: 'Chưa sở hữu trang phục',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+          404: {
+            description: 'Trang phục không tồn tại',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
           },
         },
       },

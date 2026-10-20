@@ -1,6 +1,8 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\game\game.js
 // Luật chơi và tính toán vật lý: Pure JS, không DOM, không React
 
+import { playDie, playFlap, playHit, playScore } from './sound.js';
+
 export const W = 360, H = 540, GROUND = 470; // Kích thước màn chơi logic (px)
 export const BIRD_X = 100, R = 13;           // Vị trí X cố định và bán kính vẽ chú chim
 export const PIPE_W = 58, GAP = 140;         // Độ rộng cột và khoảng hở giữa 2 cột trên/dưới
@@ -50,15 +52,23 @@ export function flap(g) {
     g.pipes = [newPipe(W + 100)];
   }
   g.vy = FLAP;
+  playFlap();
 }
 
 // Xử lý khi chim chết
-function die(g) {
+function die(g, reason = 'hit') {
   g.phase = 'dead';
   g.deadAt = performance.now();
   if (g.score > g.best) {
     g.best = g.score;
     g.newBest = true;
+  }
+  if (reason === 'pipe') {
+    playHit();
+    // Tiếng rơi chậm hơn một chút sau khi đâm cột
+    setTimeout(() => playDie(), 120);
+  } else {
+    playHit();
   }
 }
 
@@ -89,6 +99,7 @@ export function step(g, dt, calm = false) {
       if (!p.passed && p.x + PIPE_W < BIRD_X) {
         p.passed = true;
         g.score++;
+        playScore();
       }
     }
     // Xóa cột đã đi khuất màn hình bên trái
@@ -103,7 +114,11 @@ export function step(g, dt, calm = false) {
       hits(BIRD_X, g.y, HIT_R, p.x, p.top + GAP, PIPE_W, H);
 
     // Chết nếu va chạm cột hoặc chạm đất
-    if (g.y + R >= GROUND || g.pipes.some(hitsPipe)) die(g);
+    if (g.pipes.some(hitsPipe)) {
+      die(g, 'pipe');
+    } else if (g.y + R >= GROUND) {
+      die(g, 'ground');
+    }
   }
 
   // Chặn không cho chim lún sâu xuống lòng đất

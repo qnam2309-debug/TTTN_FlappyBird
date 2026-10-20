@@ -98,9 +98,16 @@ export const gameApi = {
   getLeaderboard: (limit = 10) => apiRequest(`/leaderboard?limit=${limit}`, {
     authenticated: false,
   }),
-  getSkins: () => apiRequest('/skins'),
-  equipSkin: (skinId) => apiRequest('/skins/equip', {
+  updateCoins: (amount) => apiRequest('/coins', {
     method: 'POST',
-    body: JSON.stringify({ skinId }),
+    body: JSON.stringify({ amount }),
+  }),
+  buySkin: (skinCode) => apiRequest('/skins/buy', {
+    method: 'POST',
+    body: JSON.stringify({ skinCode }),
+  }),
+  equipSkin: (skinCode) => apiRequest('/skins/equip', {
+    method: 'POST',
+    body: JSON.stringify({ skinCode }),
   }),
 };

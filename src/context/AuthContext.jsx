@@ -6,11 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { authApi, gameApi } from '../services/api.js';
 import {
   AVAILABLE_SKINS,
-  mockBuySkin,
   mockClearActiveUser,
-  mockEquipSkin,
-  mockSaveScore,
-  mockSyncAuthenticatedUser,
 } from '../services/mockApi.js';
 
 const AuthContext = createContext(null);
@@ -30,8 +26,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await authApi.getCurrentUser();
         if (res?.user) {
-          const shopUser = mockSyncAuthenticatedUser(res.user);
-          setUser({ ...res.user, ...shopUser });
+          setUser(res.user);
         }
       } catch (err) {
         if (err.status === 401) {
@@ -50,17 +45,15 @@ export function AuthProvider({ children }) {
   // Đăng nhập qua Backend thật
   const login = async (username, password) => {
     const res = await authApi.login(username, password);
-    const loggedInUser = { ...res.user, ...mockSyncAuthenticatedUser(res.user) };
-    setUser(loggedInUser);
-    return loggedInUser;
+    setUser(res.user);
+    return res.user;
   };
 
   // Đăng ký qua Backend thật
   const register = async (username, password) => {
     const res = await authApi.register(username, password);
-    const newUser = { ...res.user, ...mockSyncAuthenticatedUser(res.user) };
-    setUser(newUser);
-    return newUser;
+    setUser(res.user);
+    return res.user;
   };
 
   // Đăng xuất
@@ -70,7 +63,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // Gửi điểm sau ván chơi
+  // Gửi điểm sau ván chơi (thưởng coin tự động lưu vào MySQL)
   const submitScore = async (score) => {
     if (!user) {
       // Chế độ Guest: chỉ trả về kết quả local
@@ -78,11 +71,10 @@ export function AuthProvider({ children }) {
     }
     try {
       const res = await gameApi.submitScore(score);
-      const shopResult = await mockSaveScore(score);
       setUser((prev) => ({
         ...prev,
         bestScore: res.bestScore,
-        coins: shopResult.totalCoins ?? prev.coins,
+        coins: res.totalCoins ?? (prev.coins + score),
       }));
       return res;
     } catch (err) {
@@ -95,20 +87,30 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Mua skin mới
+  // Mua skin mới (lưu vào MySQL)
   const buySkin = async (skinId) => {
-    const res = await mockBuySkin(skinId);
+    if (!user) throw new Error('Vui lòng đăng nhập!');
+    const res = await gameApi.buySkin(skinId);
     if (res.success) {
-      setUser(res.user);
+      setUser((prev) => ({
+        ...prev,
+        coins: res.coins,
+        activeSkin: res.activeSkin,
+        ownedSkins: res.ownedSkins,
+      }));
     }
     return res;
   };
 
-  // Trang bị skin đã sở hữu
+  // Trang bị skin đã sở hữu (lưu vào MySQL)
   const equipSkin = async (skinId) => {
-    const res = await mockEquipSkin(skinId);
+    if (!user) throw new Error('Vui lòng đăng nhập!');
+    const res = await gameApi.equipSkin(skinId);
     if (res.success) {
-      setUser(res.user);
+      setUser((prev) => ({
+        ...prev,
+        activeSkin: res.activeSkin,
+      }));
     }
     return res;
   };

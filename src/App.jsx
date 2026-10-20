@@ -24,7 +24,7 @@ function GameScreen() {
   const [scale, setScale] = useState(1);
 
   // Lấy dữ liệu tài khoản và trang phục đang mặc
-  const { activeSkinColors, submitScore } = useAuth();
+  const { user, activeSkinColors, submitScore } = useAuth();
 
   // Xử lý khi chim chết (kết thúc ván)
   const handleGameOver = async (finalScore) => {
@@ -36,7 +36,7 @@ function GameScreen() {
   };
 
   // Khởi tạo Game Loop Canvas
-  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver);
+  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver, user?.bestScore);
 
   // Tự động tính toán scale màn hình để fit vừa vặn mọi kích thước
   useEffect(() => {

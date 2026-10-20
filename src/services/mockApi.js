@@ -79,7 +79,7 @@ export function mockSyncAuthenticatedUser(user) {
     id: user.id,
     username: user.username,
     bestScore: Number(user.bestScore) || existingUser?.bestScore || 0,
-    coins: Number.isFinite(user.coins) ? user.coins : existingUser?.coins || 0,
+    coins: Number.isFinite(existingUser?.coins) ? existingUser.coins : (Number.isFinite(user.coins) ? user.coins : 50),
     ownedSkins: existingUser?.ownedSkins || ['default'],
     activeSkin: existingUser?.activeSkin || user.activeSkin || user.currentSkinId || 'default',
   };

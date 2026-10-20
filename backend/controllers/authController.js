@@ -66,10 +66,11 @@ exports.register = async (req, res, next) => {
     }
 
     const token = signToken(user);
+    const ownedSkins = await User.getOwnedSkins(user.UserID);
     return res.status(201).json({
       success: true,
       token,
-      user: User.toPublic(user),
+      user: User.toPublic(user, ownedSkins),
     });
   } catch (err) {
     next(err);
@@ -107,10 +108,11 @@ exports.login = async (req, res, next) => {
     }
 
     const token = signToken(user);
+    const ownedSkins = await User.getOwnedSkins(user.UserID);
     return res.json({
       success: true,
       token,
-      user: User.toPublic(user),
+      user: User.toPublic(user, ownedSkins),
     });
   } catch (err) {
     next(err);
@@ -127,7 +129,8 @@ exports.me = async (req, res, next) => {
         message: 'Không tìm thấy người dùng!',
       });
     }
-    return res.json({ success: true, user: User.toPublic(user) });
+    const ownedSkins = await User.getOwnedSkins(user.UserID);
+    return res.json({ success: true, user: User.toPublic(user, ownedSkins) });
   } catch (err) {
     next(err);
   }

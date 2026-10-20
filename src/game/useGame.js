@@ -19,7 +19,7 @@ function readBest() {
 const initialBest = readBest();
 const initialGame = newGame(initialBest);
 
-export function useGame(canvasRef, activeSkin = null, onGameOver = null) {
+export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBestScore = null) {
   const game = useRef(initialGame);
   const [hud, setHud] = useState({
     phase: initialGame.phase,
@@ -35,6 +35,15 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null) {
     onGameOverRef.current = onGameOver;
     activeSkinRef.current = activeSkin;
   }, [onGameOver, activeSkin]);
+
+  // Đồng bộ kỷ lục vào game ref khi tài khoản đăng nhập/đăng xuất thay đổi
+  useEffect(() => {
+    const targetBest =
+      userBestScore !== null && userBestScore !== undefined
+        ? Number(userBestScore) || 0
+        : readBest();
+    game.current.best = targetBest;
+  }, [userBestScore]);
 
   useEffect(() => {
     const g = game.current;
@@ -105,14 +114,21 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null) {
     };
   }, [canvasRef]);
 
-  // Tự động lưu điểm cao nhất vào localStorage
+  // Tự động lưu điểm cao nhất vào localStorage (chỉ khi là khách)
   useEffect(() => {
-    try {
-      localStorage.setItem(BEST_KEY, hud.best);
-    } catch (err) {
-      console.warn(err);
+    if (userBestScore === null || userBestScore === undefined) {
+      try {
+        localStorage.setItem(BEST_KEY, hud.best);
+      } catch (err) {
+        console.warn(err);
+      }
     }
-  }, [hud.best]);
+  }, [hud.best, userBestScore]);
 
-  return [hud, () => flap(game.current), () => reset(game.current)];
+  const effectiveBest =
+    userBestScore !== null && userBestScore !== undefined
+      ? Math.max(Number(userBestScore) || 0, hud.score)
+      : hud.best;
+
+  return [{ ...hud, best: effectiveBest }, () => flap(game.current), () => reset(game.current)];
 }

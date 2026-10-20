@@ -10,7 +10,19 @@ const swaggerSpec = require("./swagger");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Cấu hình CORS: cho phép domain frontend khi deploy, mặc định mở cho localhost khi dev
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  : [];
+app.use(cors({
+  origin: allowedOrigins.length > 0
+    ? (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin)) cb(null, true);
+        else cb(new Error('Not allowed by CORS'));
+      }
+    : true, // Cho phép tất cả khi chưa cấu hình (môi trường dev)
+  credentials: true,
+}));
 app.use(express.json());
 
 // Tài liệu API (Swagger UI) tại http://localhost:5000/api-docs

@@ -5,13 +5,16 @@
 const db = require('../config/db');
 
 // Chuyển dòng dữ liệu DB thành object "sạch" trả về cho client (bỏ mật khẩu)
-function toPublic(row) {
+function toPublic(row, ownedSkins = ['default']) {
   if (!row) return null;
+  const activeSkin = row.CurrentSkinCode || (row.CurrentSkinID === 1 ? 'default' : 'default');
   return {
     id: row.UserID,
     username: row.Username,
     coins: row.Coins,
     currentSkinId: row.CurrentSkinID,
+    activeSkin: activeSkin,
+    ownedSkins: ownedSkins.length ? ownedSkins : ['default'],
     bestScore: Number(row.BestScore) || 0,
     createdAt: row.CreatedAt,
   };
@@ -29,11 +32,13 @@ async function createUser({ username, passwordHash, coins = 0, currentSkinId = n
 // Tìm user theo username (dùng cho đăng nhập + kiểm tra trùng khi đăng ký)
 async function findByUsername(username) {
   const [rows] = await db.execute(
-    `SELECT USERS.*,
+    `SELECT USERS.*, SKINS.SkinCode AS CurrentSkinCode,
       (SELECT COALESCE(MAX(GAME_RESULTS.Score), 0)
        FROM GAME_RESULTS
        WHERE GAME_RESULTS.UserID = USERS.UserID) AS BestScore
-     FROM USERS WHERE Username = ? LIMIT 1`,
+     FROM USERS 
+     LEFT JOIN SKINS ON USERS.CurrentSkinID = SKINS.SkinID
+     WHERE Username = ? LIMIT 1`,
     [username]
   );
   return rows[0] || null;
@@ -42,11 +47,13 @@ async function findByUsername(username) {
 // Tìm user theo id (dùng cho GET /me)
 async function findById(id) {
   const [rows] = await db.execute(
-    `SELECT USERS.*,
+    `SELECT USERS.*, SKINS.SkinCode AS CurrentSkinCode,
       (SELECT COALESCE(MAX(GAME_RESULTS.Score), 0)
        FROM GAME_RESULTS
        WHERE GAME_RESULTS.UserID = USERS.UserID) AS BestScore
-     FROM USERS WHERE UserID = ? LIMIT 1`,
+     FROM USERS 
+     LEFT JOIN SKINS ON USERS.CurrentSkinID = SKINS.SkinID
+     WHERE UserID = ? LIMIT 1`,
     [id]
   );
   return rows[0] || null;
@@ -60,10 +67,41 @@ async function addOwnedSkin(userId, skinId) {
   );
 }
 
+// Cập nhật số xu (thưởng hoặc trừ xu)
+async function updateCoins(userId, coinDelta) {
+  await db.execute(
+    'UPDATE USERS SET Coins = GREATEST(0, Coins + ?) WHERE UserID = ?',
+    [coinDelta, userId]
+  );
+}
+
+// Cập nhật skin đang trang bị
+async function updateCurrentSkin(userId, skinId) {
+  await db.execute(
+    'UPDATE USERS SET CurrentSkinID = ? WHERE UserID = ?',
+    [skinId, userId]
+  );
+}
+
+// Lấy danh sách skinCode mà user đã sở hữu
+async function getOwnedSkins(userId) {
+  const [rows] = await db.execute(
+    `SELECT SKINS.SkinCode 
+     FROM USER_SKINS 
+     JOIN SKINS ON USER_SKINS.SkinID = SKINS.SkinID 
+     WHERE USER_SKINS.UserID = ?`,
+    [userId]
+  );
+  return rows.map((r) => r.SkinCode);
+}
+
 module.exports = {
   createUser,
   findByUsername,
   findById,
   addOwnedSkin,
+  updateCoins,
+  updateCurrentSkin,
+  getOwnedSkins,
   toPublic,
 };
