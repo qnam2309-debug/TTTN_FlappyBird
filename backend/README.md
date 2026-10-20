@@ -1,8 +1,6 @@
-# Flappy Bird — Backend (Authentication & User)
+# Flappy Bird — Backend
 
-Phần **Backend** của đồ án **TTTN Flappy Bird**, phụ trách chức năng **Xác thực & Quản lý người dùng** (đăng ký, đăng nhập, lấy thông tin, đăng xuất).
-
-> Nhánh: `feature/be-auth` · Phạm vi: Backend Part 1 — Authentication & User.
+Backend Node/Express cho xác thực, lưu điểm và bảng xếp hạng của game Flappy Bird.
 
 ---
 
@@ -38,11 +36,13 @@ backend/
 │   ├── User.js                 # Truy vấn bảng USERS
 │   └── Skin.js                 # Truy vấn bảng SKINS
 ├── controllers/
-│   └── authController.js       # Xử lý nghiệp vụ đăng ký/đăng nhập...
+│   ├── authController.js       # Xử lý nghiệp vụ xác thực
+│   └── gameController.js       # Lưu điểm và lấy bảng xếp hạng
 ├── middleware/
 │   └── auth.js                 # Middleware xác thực JWT
 └── routes/
-    └── auth.js                 # Khai báo các route Auth
+    ├── auth.js                 # Khai báo các route Auth
+    └── game.js                 # Khai báo các route Game
 ```
 
 ---
@@ -113,6 +113,10 @@ Base URL: `http://localhost:5000`
 | POST | `/api/auth/login` | Đăng nhập | Không |
 | GET | `/api/auth/me` | Lấy thông tin người dùng hiện tại | ✅ Bearer token |
 | POST | `/api/auth/logout` | Đăng xuất | Không |
+| POST | `/api/scores` | Lưu điểm ván chơi, trả về điểm cao nhất | ✅ Bearer JWT |
+| GET | `/api/leaderboard?limit=10` | Lấy bảng xếp hạng (tối đa 100 người chơi) | Không |
+
+Điểm lưu qua `/api/scores` phải là số nguyên không âm. Kết quả được ghi vào `GAME_RESULTS`; leaderboard xếp người chơi theo điểm cao nhất.
 
 ### Ví dụ
 
@@ -130,8 +134,24 @@ Base URL: `http://localhost:5000`
     "username": "player1",
     "coins": 50,
     "currentSkinId": 1,
+    "bestScore": 0,
     "createdAt": "2026-10-15T21:28:43.000Z"
   }
+}
+```
+
+**Lưu điểm** — `POST /api/scores` (cần `Authorization: Bearer <token>`)
+```json
+{ "score": 12 }
+```
+
+**Bảng xếp hạng** — `GET /api/leaderboard?limit=10`
+```json
+{
+  "success": true,
+  "leaderboard": [
+    { "rank": 1, "id": "1", "username": "player1", "bestScore": 12 }
+  ]
 }
 ```
 
@@ -175,7 +195,8 @@ Chi tiết cột xem trong file [`sql/schema.sql`](sql/schema.sql).
 2. Test `POST /api/auth/register` → **Try it out** → nhập body → **Execute** → copy `token`.
 3. Bấm **🔒 Authorize** → dán `token` → **Authorize**.
 4. Gọi `GET /api/auth/me` để lấy thông tin người dùng.
-5. Test thêm các case lỗi: đăng ký trùng (409), sai mật khẩu (401), thiếu token (401).
+5. Test `POST /api/scores` với token, sau đó gọi `GET /api/leaderboard`.
+6. Test thêm các case lỗi: đăng ký trùng (409), sai mật khẩu (401), thiếu token (401).
 
 > File spec thô (OpenAPI JSON): **http://localhost:5000/api-docs.json**
 
@@ -184,5 +205,5 @@ Chi tiết cột xem trong file [`sql/schema.sql`](sql/schema.sql).
 ## 9. Ghi chú
 
 - **JWT là "stateless"**: đăng xuất = client xóa token (server không lưu phiên).
-- `bestScore` (điểm cao nhất) và `ownedSkins` (danh sách skin) sẽ do các phần **Score/Leaderboard** và **Shop** xử lý (dựa trên `GAME_RESULTS` và `USER_SKINS`).
+- `bestScore` được tính từ `GAME_RESULTS`. Cửa hàng skin không thuộc các API backend được triển khai ở đây.
 - Cấu trúc database được chuyển từ ERD (cú pháp SQL Server) sang **MySQL/MariaDB** để chạy trên XAMPP.

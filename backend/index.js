@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
+const gameRoutes = require("./routes/game");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 
 // Các route nghiệp vụ
 app.use("/api/auth", authRoutes);
+app.use("/api", gameRoutes);
 
 // Xử lý route không tồn tại (404)
 app.use((req, res) => {

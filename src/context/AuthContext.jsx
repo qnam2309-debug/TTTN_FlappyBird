@@ -3,12 +3,14 @@
 // Quản lý trạng thái xác thực: Người dùng đăng nhập vs Khách (Guest) và Skin chim
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { authApi } from '../services/api.js';
+import { authApi, gameApi } from '../services/api.js';
 import {
   AVAILABLE_SKINS,
   mockBuySkin,
+  mockClearActiveUser,
   mockEquipSkin,
   mockSaveScore,
+  mockSyncAuthenticatedUser,
 } from '../services/mockApi.js';
 
 const AuthContext = createContext(null);
@@ -27,16 +29,17 @@ export function AuthProvider({ children }) {
       }
       try {
         const res = await authApi.getCurrentUser();
-        if (res.success && res.user) {
-          setUser({
-            ...res.user,
-            activeSkin: res.user.currentSkinId || 'default',
-          });
+        if (res?.user) {
+          const shopUser = mockSyncAuthenticatedUser(res.user);
+          setUser({ ...res.user, ...shopUser });
         }
       } catch (err) {
-        console.error('Phiên đăng nhập hết hạn hoặc không hợp lệ:', err);
-        localStorage.removeItem('flappy_token');
-        setUser(null);
+        if (err.status === 401) {
+          await authApi.logout();
+          setUser(null);
+        } else {
+          console.error('Lỗi tải phiên đăng nhập:', err);
+        }
       } finally {
         setLoading(false);
       }
@@ -47,13 +50,7 @@ export function AuthProvider({ children }) {
   // Đăng nhập qua Backend thật
   const login = async (username, password) => {
     const res = await authApi.login(username, password);
-    if (res.token) {
-      localStorage.setItem('flappy_token', res.token);
-    }
-    const loggedInUser = {
-      ...res.user,
-      activeSkin: res.user.currentSkinId || 'default',
-    };
+    const loggedInUser = { ...res.user, ...mockSyncAuthenticatedUser(res.user) };
     setUser(loggedInUser);
     return loggedInUser;
   };
@@ -61,25 +58,15 @@ export function AuthProvider({ children }) {
   // Đăng ký qua Backend thật
   const register = async (username, password) => {
     const res = await authApi.register(username, password);
-    if (res.token) {
-      localStorage.setItem('flappy_token', res.token);
-    }
-    const newUser = {
-      ...res.user,
-      activeSkin: res.user.currentSkinId || 'default',
-    };
+    const newUser = { ...res.user, ...mockSyncAuthenticatedUser(res.user) };
     setUser(newUser);
     return newUser;
   };
 
   // Đăng xuất
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // Bỏ qua lỗi mạng khi logout
-    }
-    localStorage.removeItem('flappy_token');
+    await authApi.logout();
+    mockClearActiveUser();
     setUser(null);
   };
 
@@ -89,15 +76,23 @@ export function AuthProvider({ children }) {
       // Chế độ Guest: chỉ trả về kết quả local
       return { isGuest: true, score };
     }
-    const res = await mockSaveScore(score);
-    if (res.success) {
+    try {
+      const res = await gameApi.submitScore(score);
+      const shopResult = await mockSaveScore(score);
       setUser((prev) => ({
         ...prev,
         bestScore: res.bestScore,
-        coins: res.totalCoins,
+        coins: shopResult.totalCoins ?? prev.coins,
       }));
+      return res;
+    } catch (err) {
+      if (err.status === 401) {
+        await authApi.logout();
+        mockClearActiveUser();
+        setUser(null);
+      }
+      throw err;
     }
-    return res;
   };
 
   // Mua skin mới
