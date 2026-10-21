@@ -1,13 +1,16 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\backend\middleware\auth.js
-// Middleware xác thực JWT: kiểm tra token trong header Authorization.
-// Dùng để bảo vệ các route cần đăng nhập (ví dụ GET /api/auth/me).
+// Middleware xác thực JWT: CHỈ lấy token từ header Authorization.
+// Bảo mật: KHÔNG chấp nhận token qua URL query string (tránh lộ token
+// trong log, lịch sử trình duyệt, referrer...).
 
 const jwt = require('jsonwebtoken');
 
 module.exports = function auth(req, res, next) {
-  // Lấy token từ header: "Authorization: Bearer <token>"
+  // Chỉ đọc từ header: "Authorization: Bearer <token>"
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  // Chấp nhận "Bearer" không phân biệt hoa/thường và khoảng trắng thừa
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  const token = match ? match[1].trim() : null;
 
   if (!token) {
     return res.status(401).json({

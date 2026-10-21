@@ -3,6 +3,9 @@
 -- Chuyển từ ERD gốc (cú pháp SQL Server) sang MySQL.
 -- Cấu trúc khớp 100% ERD: SKINS, USERS, USER_SKINS, GAME_RESULTS.
 --
+-- Khóa chính tự tăng (AUTO_INCREMENT) đều bắt đầu từ 1 và tăng tuần tự
+-- (1, 2, 3, ...) khi import vào database mới.
+--
 -- Chú thích chuyển đổi SQL Server -> MySQL:
 --   IDENTITY(1,1)       -> AUTO_INCREMENT
 --   NVARCHAR(...)       -> VARCHAR(...)  (utf8mb4 đã hỗ trợ Unicode)
@@ -36,14 +39,14 @@ CREATE TABLE IF NOT EXISTS SKINS (
     PRIMARY KEY (SkinID),
     UNIQUE KEY uq_skins_skincode (SkinCode),
     CONSTRAINT CK_SKINS_Price CHECK (Price >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- 3. BANG USERS: TAI KHOAN NGUOI CHOI
 -- ============================================
 CREATE TABLE IF NOT EXISTS USERS (
     UserID        BIGINT       NOT NULL AUTO_INCREMENT,
-    Username      VARCHAR(50)  NOT NULL,
+    Username      VARCHAR(30)  NOT NULL,
     PasswordHash  VARCHAR(255) NOT NULL,
     CurrentSkinID BIGINT       NULL,
     Coins         INT          NOT NULL DEFAULT 0,
@@ -56,7 +59,7 @@ CREATE TABLE IF NOT EXISTS USERS (
     CONSTRAINT FK_USERS_SKINS FOREIGN KEY (CurrentSkinID)
         REFERENCES SKINS (SkinID)
         ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- 4. BANG USER_SKINS: TRANG PHUC DA SO HUU (quan he n-n)
@@ -91,7 +94,7 @@ CREATE TABLE IF NOT EXISTS GAME_RESULTS (
         ON DELETE SET NULL,
     CONSTRAINT CK_GAME_RESULTS_Score CHECK (Score >= 0),
     CONSTRAINT CK_GAME_RESULTS_Duration CHECK (DurationSeconds >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- 6. TAO INDEX CHO TRUY VAN DIEM SO
@@ -107,8 +110,8 @@ CREATE INDEX IX_GAME_RESULTS_Score_Time
 -- ============================================
 INSERT IGNORE INTO SKINS (SkinCode, SkinName, ImageURL, Price)
 VALUES 
-    ('default', 'Mặc định', 'images/skins/default.png', 0),
-    ('blue', 'Chim Xanh Đại Dương', 'images/skins/blue.png', 15),
+    ('default', 'Vàng Cổ Điển', 'images/skins/default.png', 0),
+    ('blue', 'Xanh Đại Dương', 'images/skins/blue.png', 15),
     ('red', 'Phượng Hoàng Đỏ', 'images/skins/red.png', 30),
     ('gold', 'Hoàng Kim Vua', 'images/skins/gold.png', 50),
     ('shadow', 'Bóng Đêm', 'images/skins/shadow.png', 80);

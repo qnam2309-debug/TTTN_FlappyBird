@@ -16,23 +16,40 @@ function signToken(user) {
   );
 }
 
+// Ràng buộc dữ liệu cho username & password
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateCredentials(username, password) {
+  // Username: định dạng email, tối đa 30 ký tự, không khoảng trắng
+  if (!username) return 'Vui lòng nhập tên đăng nhập!';
+  if (username.length > 30) return 'Tên đăng nhập tối đa 30 ký tự!';
+  if (!EMAIL_REGEX.test(username)) {
+    return 'Tên đăng nhập phải là địa chỉ email hợp lệ (không chứa khoảng trắng)!';
+  }
+
+  // Password: tối đa 8 ký tự, có in hoa + thường + ký tự đặc biệt, không khoảng trắng
+  if (!password) return 'Vui lòng nhập mật khẩu!';
+  if (password.length > 8) return 'Mật khẩu tối đa 8 ký tự!';
+  if (/\s/.test(password)) return 'Mật khẩu không được chứa khoảng trắng!';
+  if (!/[A-Z]/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ in hoa!';
+  if (!/[a-z]/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ thường!';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt!';
+
+  return null;
+}
+
 // 1. POST /api/auth/register - Đăng ký tài khoản mới
 exports.register = async (req, res, next) => {
   try {
     const username = (req.body.username || '').trim();
     const password = req.body.password || '';
 
-    // Validate dữ liệu đầu vào
-    if (!username || !password) {
+    // Validate dữ liệu đầu vào (email + độ phức tạp mật khẩu)
+    const validationError = validateCredentials(username, password);
+    if (validationError) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!',
-      });
-    }
-    if (password.length < 3) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mật khẩu phải từ 3 ký tự trở lên!',
+        message: validationError,
       });
     }
 

@@ -39,7 +39,8 @@ export async function apiRequest(endpoint, options = {}) {
   const token = authenticated ? getToken() : null;
   const headers = {
     ...(requestOptions.body !== undefined && { 'Content-Type': 'application/json' }),
-    ...(token && { Authorization: `Bearer ${token}` }),
+    // Token gửi qua header Authorization (KHÔNG đưa lên URL query string)
+    ...(token && { Authorization: `Bearer ${token.trim()}` }),
     ...requestOptions.headers,
   };
 
