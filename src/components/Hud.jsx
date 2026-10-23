@@ -3,19 +3,36 @@
 
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function Hud({ phase, score, best, newBest }) {
+export default function Hud({ phase, score, best, newBest, networkMode, countdown }) {
   const { user } = useAuth();
 
   // 1. Khi đang chơi: Hiển thị điểm số to ở giữa phía trên
   if (phase === 'play') {
     return (
-      <div className="pointer-events-none absolute inset-0 flex justify-center pt-8">
-        <span
-          className="text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]"
-          style={{ WebkitTextStroke: '2px #0f172a' }}
-        >
-          {score}
-        </span>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="flex justify-center pt-8">
+          <span
+            className="text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]"
+            style={{ WebkitTextStroke: '2px #0f172a' }}
+          >
+            {score}
+          </span>
+        </div>
+        {networkMode && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/65 p-4 text-center backdrop-blur-[2px]">
+            <h2 className="text-2xl font-black text-white drop-shadow sm:text-3xl">
+              {networkMode === 'offline' ? 'MẤT KẾT NỐI MẠNG' : 'Đã có mạng'}
+            </h2>
+            {networkMode === 'countdown' && (
+              <p className="mt-2 text-5xl font-black text-amber-400" aria-live="polite">
+                {countdown}
+              </p>
+            )}
+            <p className="mt-3 text-sm font-semibold text-slate-200">
+              Điểm hiện tại: {score}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
