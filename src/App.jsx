@@ -76,7 +76,7 @@ function GameScreen() {
         }}
       >
         <div
-          className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-800 bg-sky-200"
+          className="relative pixel-box overflow-hidden bg-sky-200"
           style={{ width: `${playfieldWidth}px`, height: `${playfieldHeight}px` }}
         >
           {/* Canvas vẽ game */}

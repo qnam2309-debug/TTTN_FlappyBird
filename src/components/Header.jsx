@@ -1,5 +1,5 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\components\Header.jsx
-// Thanh tiêu đề điều hướng, số xu, tài khoản và nút mở modal
+// Thanh tiêu đề phong cách 2D Retro Arcade
 
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -7,12 +7,12 @@ export default function Header({ onOpenAuth, onOpenLeaderboard, onOpenShop }) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="w-full max-w-md flex items-center justify-between px-3 py-2 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-lg backdrop-blur-xs">
+    <header className="w-full max-w-md flex items-center justify-between px-3 py-2 bg-amber-400 pixel-box">
       {/* Logo & Tiêu đề game */}
       <div className="flex items-center gap-2">
-        <span className="text-xl">🐦</span>
-        <h1 className="text-base sm:text-lg font-black tracking-wide text-amber-400 drop-shadow">
-          Flappy Bird
+        <span className="text-lg">🐦</span>
+        <h1 className="text-xs sm:text-sm font-black text-black tracking-tighter">
+          FLAPPY BIRD
         </h1>
       </div>
 
@@ -22,57 +22,54 @@ export default function Header({ onOpenAuth, onOpenLeaderboard, onOpenShop }) {
         <button
           onClick={onOpenLeaderboard}
           title="Bảng Xếp Hạng"
-          className="flex items-center gap-1 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 px-2.5 py-1.5 text-xs font-bold text-amber-300 border border-slate-700 shadow transition cursor-pointer"
+          className="flex items-center gap-1 bg-yellow-300 hover:bg-yellow-200 pixel-btn px-2 py-1 text-[9px] font-black text-black cursor-pointer"
         >
           <span>🏆</span>
-          <span className="hidden sm:inline">Hạng</span>
+          <span className="hidden sm:inline">TOP</span>
         </button>
 
         {/* Nút Cửa Hàng */}
         <button
           onClick={onOpenShop}
           title="Cửa Hàng Trang Phục"
-          className="flex items-center gap-1 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 px-2.5 py-1.5 text-xs font-bold text-sky-300 border border-slate-700 shadow transition cursor-pointer"
+          className="flex items-center gap-1 bg-sky-300 hover:bg-sky-200 pixel-btn px-2 py-1 text-[9px] font-black text-black cursor-pointer"
         >
           <span>🛍️</span>
-          <span className="hidden sm:inline">Shop</span>
+          <span className="hidden sm:inline">SHOP</span>
         </button>
 
         {/* Trạng thái Tài khoản */}
         {user ? (
-          <div className="flex items-center gap-1.5 pl-1 border-l border-slate-800">
+          <div className="flex items-center gap-1 pl-1 border-l-2 border-black">
             {/* Hiển thị số Xu */}
-            <div className="flex items-center gap-1 rounded-lg bg-amber-500/15 border border-amber-500/30 px-2 py-1 text-xs font-black text-amber-300">
+            <div className="flex items-center gap-0.5 bg-yellow-200 border-2 border-black px-1.5 py-0.5 text-[9px] font-black text-black">
               <span>🪙</span>
               <span>{user.coins}</span>
             </div>
 
             {/* Tên người chơi */}
-            <span className="text-xs font-bold text-slate-300 max-w-[80px] truncate" title={user.username}>
+            <span className="text-[9px] font-black text-black max-w-[70px] truncate" title={user.username}>
               {user.username}
             </span>
 
-            {/* Nút đăng xuất */}
+            {/* Nút Đăng xuất */}
             <button
               onClick={logout}
               title="Đăng xuất"
-              className="rounded-lg bg-rose-500/10 hover:bg-rose-500/25 p-1.5 text-xs font-bold text-rose-400 border border-rose-500/20 transition cursor-pointer"
+              className="p-1 bg-rose-400 hover:bg-rose-300 pixel-btn text-black cursor-pointer text-[9px]"
             >
-              🚪
+              ✕
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 pl-1 border-l border-slate-800">
-            <span className="text-[11px] font-semibold text-slate-400 hidden xs:inline">
-              Khách
-            </span>
-            <button
-              onClick={onOpenAuth}
-              className="rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 px-3 py-1.5 text-xs font-bold text-slate-950 shadow transition cursor-pointer"
-            >
-              Đăng Nhập
-            </button>
-          </div>
+          /* Nút Đăng nhập / Đăng ký */
+          <button
+            onClick={onOpenAuth}
+            className="flex items-center gap-1 bg-emerald-400 hover:bg-emerald-300 pixel-btn px-2.5 py-1 text-[9px] font-black text-black cursor-pointer"
+          >
+            <span>👤</span>
+            <span>LOGIN</span>
+          </button>
         )}
       </div>
     </header>

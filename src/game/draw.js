@@ -1,31 +1,30 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\game\draw.js
-// Phụ trách vẽ Canvas 2D: Hỗ trợ Theme Ngày/Đêm và Skin trang phục chim
+// Phụ trách vẽ Canvas 2D PIXEL ART (Phong cách Retro 8-bit nguyên bản)
 
-import { BIRD_X, GAP, GROUND, H, PIPE_W, R, W } from './game.js';
+import { BIRD_X, GAP, GROUND, H, PIPE_W, W } from './game.js';
 
-// Bảng màu mặc định (Theme ban ngày)
+// Bảng màu 2D Pixel Retro kinh điển
 export const DEFAULT_COLORS = {
-  skyTop: '#8fd3e8',
-  skyBottom: '#dff3e4',
-  orb: '#fff3b0',
+  skyTop: '#4ec0ca',
+  skyBottom: '#4ec0ca',
+  orb: '#fbfbe3',
   cloud: '#ffffff',
-  hill: '#9fd6b0',
-  pipe: '#2f9e6e',
-  pipeLight: '#6fd0a0',
-  pipeDark: '#1c6b4a',
-  ground: '#e6c98a',
-  groundDark: '#b8944f',
-  grass: '#86c95c',
-  bird: '#ffb52e',
-  wing: '#ffd77a',
-  beak: '#ef5a3c',
+  hill: '#5ee270',
+  pipe: '#73bf2e',
+  pipeLight: '#9ce659',
+  pipeDark: '#558022',
+  ground: '#ded895',
+  groundDark: '#d0c874',
+  grass: '#75be2f',
+  bird: '#f8e038',
+  wing: '#ffffff',
+  beak: '#f85820',
   eye: '#ffffff',
-  outline: '#1d2b33',
+  outline: '#000000',
 };
 
 const COLOR_KEYS = Object.keys(DEFAULT_COLORS);
 
-// Đọc mã màu từ CSS variables nếu có
 export function readColors(into = { ...DEFAULT_COLORS }) {
   if (typeof document === 'undefined') return into;
   const css = getComputedStyle(document.documentElement);
@@ -37,130 +36,170 @@ export function readColors(into = { ...DEFAULT_COLORS }) {
   return into;
 }
 
-// Hàm vẽ chính trên Canvas mỗi khung hình
+// Ma trận điểm ảnh chú chim Pixel (17 x 12 pixel)
+// 0: Trong suốt, 1: Viền đen, 2: Màu thân chính, 3: Bụng/Màu sáng, 4: Mỏ cam, 5: Mắt trắng, 6: Cánh
+const BIRD_PIXEL_MAP = [
+  [0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+  [0,0,0,0,1,1,2,2,2,1,5,5,1,0,0,0,0],
+  [0,0,0,1,2,2,2,2,1,5,5,1,5,1,0,0,0],
+  [0,0,1,2,2,2,2,2,1,5,5,1,5,1,0,0,0],
+  [0,1,2,2,2,2,2,2,2,1,5,5,5,1,0,0,0],
+  [0,1,6,6,6,6,2,2,2,2,1,1,1,1,1,1,0],
+  [1,6,6,6,6,6,6,2,2,1,4,4,4,4,4,1,0],
+  [1,6,6,6,6,6,6,2,1,4,4,4,4,4,4,4,1],
+  [1,2,6,6,6,6,2,2,1,4,4,1,1,1,1,1,0],
+  [0,1,2,2,2,2,2,1,4,4,4,4,4,4,1,0,0],
+  [0,0,1,1,3,3,3,1,4,4,4,4,1,1,0,0,0],
+  [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0],
+];
+
 export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
-  // Tự động scale độ phân giải Canvas cho sắc nét trên màn hình Retina / điện thoại
   const k = ctx.canvas.width / W;
   ctx.setTransform(k, 0, 0, k, 0, 0);
 
-  // Áp dụng màu skin trang phục nếu người chơi đã chọn trong Shop
-  const birdColor = activeSkin?.bird || themeColors.bird;
-  const wingColor = activeSkin?.wing || themeColors.wing;
-  const beakColor = activeSkin?.beak || themeColors.beak;
+  // Tắt làm mờ (anti-aliasing) để các khối pixel vuông vức sắc nét
+  ctx.imageSmoothingEnabled = false;
 
-  const circle = (x, y, r) => {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 7);
-    ctx.fill();
-  };
-
-  const pipe = (x, y, len, capAtBottom) => {
-    ctx.fillStyle = themeColors.pipe;
-    ctx.fillRect(x, y, PIPE_W, len);
-    ctx.fillStyle = themeColors.pipeLight;
-    ctx.fillRect(x + 6, y, 8, len);
-    ctx.fillStyle = themeColors.pipeDark;
-    ctx.fillRect(x + PIPE_W - 10, y, 10, len);
-    const cy = capAtBottom ? y + len - 22 : y;
-    ctx.fillRect(x - 4, cy, PIPE_W + 8, 22);
-    ctx.fillStyle = themeColors.pipe;
-    ctx.fillRect(x - 1, cy + 3, PIPE_W + 2, 16);
-    ctx.fillStyle = themeColors.pipeLight;
-    ctx.fillRect(x + 5, cy + 3, 8, 16);
-  };
-
-  // 1. Vẽ bầu trời (Gradient) và mặt trời/mặt trăng
-  const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-  sky.addColorStop(0, themeColors.skyTop);
-  sky.addColorStop(1, themeColors.skyBottom);
-  ctx.fillStyle = sky;
+  // 1. Nền Bầu trời xanh Pixel đặc trưng Flappy Bird
+  ctx.fillStyle = '#4ec0ca';
   ctx.fillRect(0, 0, W, GROUND);
-  ctx.fillStyle = themeColors.orb;
-  circle(285, 92, 26);
 
-  // 2. Vẽ mây trôi Parallax (chậm hơn tốc độ bay)
-  ctx.fillStyle = themeColors.cloud;
-  for (const [bx, by] of [[40, 90], [190, 200], [330, 135]]) {
-    const x = (((bx - g.scroll * 0.15) % (W + 120)) + W + 120) % (W + 120) - 80;
-    circle(x, by, 16);
-    circle(x + 20, by - 9, 21);
-    circle(x + 44, by, 16);
-    ctx.fillRect(x, by, 44, 16);
+  // 2. Mây trắng chân trời Pixel
+  ctx.fillStyle = '#ffffff';
+  for (let cx = -(g.scroll * 0.2 % 120); cx < W + 120; cx += 120) {
+    ctx.fillRect(cx, GROUND - 110, 60, 24);
+    ctx.fillRect(cx + 8, GROUND - 124, 44, 14);
+    ctx.fillRect(cx + 18, GROUND - 134, 24, 10);
   }
 
-  // 3. Vẽ đồi núi phía sau
-  ctx.fillStyle = themeColors.hill;
-  ctx.beginPath();
-  ctx.moveTo(0, GROUND);
-  for (let x = 0; x <= W; x += 6) {
-    const u = x + g.scroll * 0.3;
-    ctx.lineTo(x, GROUND - 42 - 18 * Math.sin(u / 45) - 7 * Math.sin(u / 17));
+  // 3. Tòa nhà & Cây xanh hậu cảnh chân trời Pixel
+  ctx.fillStyle = '#9fe8a4';
+  ctx.fillRect(0, GROUND - 50, W, 50);
+  ctx.fillStyle = '#7de084';
+  for (let bx = -(g.scroll * 0.4 % 40); bx < W + 40; bx += 40) {
+    ctx.fillRect(bx, GROUND - 65, 24, 15);
+    ctx.fillRect(bx + 4, GROUND - 75, 16, 10);
   }
-  ctx.lineTo(W, GROUND);
-  ctx.fill();
 
-  // 4. Vẽ các cặp cột ống nước
+  // 4. Vẽ Cột Ống nước (Pipes) dạng 2D Pixel
+  const drawPixelPipe = (x, y, len, isTop) => {
+    if (len <= 0) return;
+    const rimH = 26;
+    const bodyLen = Math.max(0, len - rimH);
+
+    // Thân ống nước
+    const bodyY = isTop ? y : y + rimH;
+    ctx.fillStyle = '#73bf2e'; // Xanh lá chính
+    ctx.fillRect(x, bodyY, PIPE_W, bodyLen);
+
+    // Vạch sáng pixel bên trái
+    ctx.fillStyle = '#9ce659';
+    ctx.fillRect(x + 3, bodyY, 6, bodyLen);
+    ctx.fillRect(x + 11, bodyY, 3, bodyLen);
+
+    // Vạch tối pixel bên phải
+    ctx.fillStyle = '#558022';
+    ctx.fillRect(x + PIPE_W - 8, bodyY, 5, bodyLen);
+
+    // Viền đen Pixel quanh thân ống
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x, bodyY, 2, bodyLen);
+    ctx.fillRect(x + PIPE_W - 2, bodyY, 2, bodyLen);
+
+    // Vành miệng ống nước
+    const rimY = isTop ? y + len - rimH : y;
+    const rimX = x - 3;
+    const rimW = PIPE_W + 6;
+
+    ctx.fillStyle = '#73bf2e';
+    ctx.fillRect(rimX, rimY, rimW, rimH);
+    ctx.fillStyle = '#9ce659';
+    ctx.fillRect(rimX + 4, rimY, 6, rimH);
+    ctx.fillRect(rimX + 12, rimY, 3, rimH);
+    ctx.fillStyle = '#558022';
+    ctx.fillRect(rimX + rimW - 9, rimY, 6, rimH);
+
+    // Viền đen vành miệng
+    ctx.fillStyle = '#000000';
+    ctx.strokeRect(rimX + 1, rimY + 1, rimW - 2, rimH - 2);
+    ctx.fillRect(rimX, rimY, rimW, 2);
+    ctx.fillRect(rimX, rimY + rimH - 2, rimW, 2);
+    ctx.fillRect(rimX, rimY, 2, rimH);
+    ctx.fillRect(rimX + rimW - 2, rimY, 2, rimH);
+  };
+
   for (const p of g.pipes) {
-    pipe(p.x, 0, p.top, true);
-    pipe(p.x, p.top + GAP, GROUND - p.top - GAP, false);
+    drawPixelPipe(p.x, 0, p.top, true);
+    drawPixelPipe(p.x, p.top + GAP, GROUND - p.top - GAP, false);
   }
 
-  // 5. Vẽ mặt đất và dải cỏ chuyển động
-  ctx.fillStyle = themeColors.ground;
+  // 5. Vẽ Mặt đất Pixel (Ground & Grass)
+  ctx.fillStyle = '#ded895';
   ctx.fillRect(0, GROUND, W, H - GROUND);
-  ctx.fillStyle = themeColors.grass;
-  ctx.fillRect(0, GROUND, W, 12);
-  ctx.fillStyle = themeColors.groundDark;
-  ctx.fillRect(0, GROUND + 12, W, 3);
-  ctx.globalAlpha = 0.35;
-  for (let x = -(g.scroll % 24) - 8; x < W; x += 24) {
-    ctx.beginPath();
-    ctx.moveTo(x + 8, GROUND);
-    ctx.lineTo(x + 18, GROUND);
-    ctx.lineTo(x + 10, GROUND + 12);
-    ctx.lineTo(x, GROUND + 12);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
 
-  // 6. Vẽ chú chim (xoay nghiêng theo vận tốc rơi vy)
+  // Thảm cỏ xanh trên mặt đất
+  ctx.fillStyle = '#75be2f';
+  ctx.fillRect(0, GROUND, W, 14);
+  ctx.fillStyle = '#558022';
+  ctx.fillRect(0, GROUND + 14, W, 3);
+
+  // Hoa văn sọc chéo pixel cuộn ngang
+  ctx.fillStyle = '#b8944f';
+  const groundOffset = (g.scroll * 1.0) % 20;
+  for (let gx = -groundOffset; gx < W + 20; gx += 20) {
+    ctx.fillRect(gx, GROUND + 20, 10, 4);
+    ctx.fillRect(gx + 5, GROUND + 28, 10, 4);
+    ctx.fillRect(gx, GROUND + 36, 10, 4);
+  }
+
+  // Viền đen ngăn cách mặt đất
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, GROUND, W, 2);
+
+  // 6. Vẽ Chú chim 2D PIXEL ART
   ctx.save();
   ctx.translate(BIRD_X, g.y);
-  ctx.rotate(Math.max(-0.5, Math.min(1.4, g.vy / 500)));
-  ctx.strokeStyle = themeColors.outline;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
 
-  // Thân chim
-  ctx.fillStyle = birdColor;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, R + 3, R, 0, 0, 7);
-  ctx.fill();
-  ctx.stroke();
+  // Xoay góc nghiêng pixel khi bay hoặc rơi
+  const angle = Math.max(-0.4, Math.min(1.3, g.vy / 450));
+  ctx.rotate(angle);
 
-  // Cánh chim (vỗ cánh theo thời gian)
-  ctx.fillStyle = wingColor;
-  ctx.beginPath();
-  ctx.ellipse(-5, 2 + (g.phase === 'dead' ? 0 : Math.sin(g.t * 22) * 3), 8, 5, 0, 0, 7);
-  ctx.fill();
-  ctx.stroke();
+  const birdColor = activeSkin?.bird || themeColors.bird;
+  const wingColor = activeSkin?.wing || '#ffffff';
+  const beakColor = activeSkin?.beak || '#f85820';
 
-  // Mỏ chim
-  ctx.fillStyle = beakColor;
-  ctx.beginPath();
-  ctx.moveTo(12, -2);
-  ctx.lineTo(23, 2);
-  ctx.lineTo(12, 6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  // Kích thước mỗi khối pixel phóng to (scale 2.2x)
+  const px = 2.2;
+  const offsetX = -(17 * px) / 2;
+  const offsetY = -(12 * px) / 2;
 
-  // Mắt chim
-  ctx.fillStyle = themeColors.eye;
-  circle(7, -5, 5);
-  ctx.stroke();
-  ctx.fillStyle = themeColors.outline;
-  circle(8.5, -5, 2);
+  // Hiệu ứng cánh vỗ lên xuống dạng pixel
+  const wingFrame = g.phase === 'dead' ? 0 : Math.floor((g.t * 12) % 3); // 0, 1, 2
+
+  for (let r = 0; r < BIRD_PIXEL_MAP.length; r++) {
+    for (let c = 0; c < BIRD_PIXEL_MAP[r].length; c++) {
+      const type = BIRD_PIXEL_MAP[r][c];
+      if (!type) continue;
+
+      let cellColor = '#000000';
+      if (type === 1) cellColor = '#000000';
+      else if (type === 2) cellColor = birdColor;
+      else if (type === 3) cellColor = '#fce490';
+      else if (type === 4) cellColor = beakColor;
+      else if (type === 5) cellColor = '#ffffff';
+      else if (type === 6) {
+        // Cánh chuyển vị trí theo khung hình vỗ
+        cellColor = wingColor;
+        let wingShift = wingFrame === 2 ? -1 : wingFrame === 0 ? 1 : 0;
+        ctx.fillStyle = cellColor;
+        ctx.fillRect(offsetX + c * px, offsetY + (r + wingShift) * px, px, px);
+        continue;
+      }
+
+      ctx.fillStyle = cellColor;
+      ctx.fillRect(offsetX + c * px, offsetY + r * px, px, px);
+    }
+  }
 
   ctx.restore();
 }
