@@ -5,7 +5,7 @@
 
 import { BIRD_X, GAP, GROUND, H, PIPE_W, W } from './game.js';
 
-export const POINTS_PER_SEASON = 3; // 3 điểm/mùa (Xuân: 0-2, Hạ: 3-5, Thu: 6-8, Đông: 9-11 -> lặp lại)
+export const POINTS_PER_SEASON = 10; // 10 điểm/mùa (Xuân: 0-9, Hạ: 10-19, Thu: 20-29, Đông: 30-39 -> lặp lại)
 
 // Cấu hình bảng màu RGB & đặc trưng chi tiết 4 MÙA
 export const SEASONS = [
@@ -377,17 +377,7 @@ export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, GROUND, W, 2);
 
-  // 9. Bảng thông báo Mùa Pixel Retro sinh động ở góc trên
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(6, 6, 76, 18);
-  ctx.fillStyle = curType === 'winter' ? '#d4f1f9' : (curType === 'autumn' ? '#ffe2c2' : (curType === 'summer' ? '#fff6b0' : '#ffd1dc'));
-  ctx.fillRect(8, 8, 72, 14);
-  ctx.fillStyle = '#000000';
-  ctx.font = '8px "Press Start 2P", monospace';
-  const seasonEmoji = curType === 'spring' ? '🌸' : (curType === 'summer' ? '☀️' : (curType === 'autumn' ? '🍂' : '❄️'));
-  ctx.fillText(`${seasonEmoji} ${sTo.name.toUpperCase()}`, 12, 19);
-
-  // 10. Vẽ Chú chim 2D PIXEL ART
+  // 9. Vẽ Chú chim 2D PIXEL ART
   ctx.save();
   ctx.translate(BIRD_X, g.y);
 
