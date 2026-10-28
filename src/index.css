@@ -18,3 +18,24 @@ body {
   -webkit-user-select: none;
   background-color: #0f172a;
 }
+
+/* Font pixel 8-bit (fallback monospace nếu không tải được font) */
+.font-pixel {
+  font-family: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Hiệu ứng chữ chạy ngang (marquee) */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 5s linear infinite;
+  will-change: transform;
+}

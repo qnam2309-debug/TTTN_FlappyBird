@@ -8,6 +8,7 @@ import Hud from './components/Hud.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import LeaderboardModal from './components/LeaderboardModal.jsx';
 import ShopModal from './components/ShopModal.jsx';
+import AccountModal from './components/AccountModal.jsx';
 import { H, W } from './game/game.js';
 import { useGame } from './game/useGame.js';
 
@@ -19,6 +20,7 @@ function GameScreen() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   // Tỉ lệ scale màn hình Canvas
   const [scale, setScale] = useState(1);
@@ -61,9 +63,11 @@ function GameScreen() {
     <div className="flex h-screen w-screen flex-col items-center justify-between bg-slate-950 p-2 sm:p-4 select-none touch-none overflow-hidden">
       {/* 1. Header trên cùng */}
       <Header
+        width={playfieldWidth}
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         onOpenShop={() => setIsShopOpen(true)}
+        onOpenAccount={() => setIsAccountOpen(true)}
       />
 
       {/* 2. Khung chơi Game (Sân khấu trung tâm) */}
@@ -76,14 +80,14 @@ function GameScreen() {
         }}
       >
         <div
-          className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-800 bg-sky-200"
+          className="relative rounded-2xl overflow-hidden shadow-2xl ring-2 ring-slate-800 bg-sky-200"
           style={{ width: `${playfieldWidth}px`, height: `${playfieldHeight}px` }}
         >
           {/* Canvas vẽ game */}
           <canvas
             ref={canvasRef}
-            width={Math.round(W * scale * pixelRatio)}
-            height={Math.round(H * scale * pixelRatio)}
+            width={Math.round(playfieldWidth * pixelRatio)}
+            height={Math.round(playfieldHeight * pixelRatio)}
             className="block w-full h-full"
           />
 
@@ -103,6 +107,7 @@ function GameScreen() {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
       <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
+      <AccountModal isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
     </div>
   );
 }

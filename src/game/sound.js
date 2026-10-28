@@ -1,7 +1,10 @@
-// D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\game\sound.js
-// Quản lý hệ thống âm thanh trò chơi bằng Web Audio API thuần (không dùng file MP3 ngoài)
+// src/game/sound.js
+// Quản lý âm thanh trò chơi bằng Web Audio API thuần (không dùng file MP3 ngoài).
+// Có master gain để chỉnh âm lượng tổng.
 
 let audioCtx = null;
+let masterGain = null;
+let masterVolume = 0.6;
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -17,7 +20,29 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// 1. Tiếng chim đập cánh bay (Flap) - quét tần số vút lên
+// Nút gain tổng (mọi âm thanh đi qua đây trước khi ra loa)
+function getMasterGain(ctx) {
+  if (!masterGain) {
+    masterGain = ctx.createGain();
+    masterGain.gain.value = masterVolume;
+    masterGain.connect(ctx.destination);
+  }
+  return masterGain;
+}
+
+// Đặt âm lượng tổng (0..1)
+export function setVolume(v) {
+  masterVolume = Math.max(0, Math.min(1, Number(v) || 0));
+  if (masterGain) {
+    masterGain.gain.value = masterVolume;
+  }
+}
+
+export function getVolume() {
+  return masterVolume;
+}
+
+// 1. Tiếng chim đập cánh bay (Flap)
 export function playFlap() {
   try {
     const ctx = getAudioContext();
@@ -36,23 +61,23 @@ export function playFlap() {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start(now);
     osc.stop(now + 0.08);
   } catch (e) {
-    // Không làm gián đoạn game nếu trình duyệt chặn âm thanh
     console.debug('Audio error:', e);
   }
 }
 
-// 2. Tiếng ghi điểm khi vượt qua cột (Score) - 2 nốt nhạc vui nhộn (ting ting)
+// 2. Tiếng ghi điểm khi vượt qua cột (Score)
 export function playScore() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
+    const out = getMasterGain(ctx);
 
     // Nốt 1
     const osc1 = ctx.createOscillator();
@@ -62,7 +87,7 @@ export function playScore() {
     gain1.gain.setValueAtTime(0.25, now);
     gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
     osc1.connect(gain1);
-    gain1.connect(ctx.destination);
+    gain1.connect(out);
     osc1.start(now);
     osc1.stop(now + 0.09);
 
@@ -74,7 +99,7 @@ export function playScore() {
     gain2.gain.setValueAtTime(0.25, now + 0.09);
     gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(out);
     osc2.start(now + 0.09);
     osc2.stop(now + 0.22);
   } catch (e) {
@@ -82,7 +107,7 @@ export function playScore() {
   }
 }
 
-// 3. Tiếng va chạm vào cột hoặc mặt đất (Hit) - âm thanh va đập trầm đục
+// 3. Tiếng va chạm (Hit)
 export function playHit() {
   try {
     const ctx = getAudioContext();
@@ -101,7 +126,7 @@ export function playHit() {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start(now);
     osc.stop(now + 0.12);
@@ -110,7 +135,7 @@ export function playHit() {
   }
 }
 
-// 4. Tiếng rơi xuống kết thúc ván (Die) - âm thanh trượt dốc
+// 4. Tiếng rơi kết thúc ván (Die)
 export function playDie() {
   try {
     const ctx = getAudioContext();
@@ -129,7 +154,7 @@ export function playDie() {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start(now);
     osc.stop(now + 0.25);

@@ -56,6 +56,13 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
+  // Đăng nhập/đăng ký bằng Google (credential là ID token do Google trả về)
+  const loginWithGoogle = async (credential) => {
+    const res = await authApi.googleLogin(credential);
+    setUser(res.user);
+    return res.user;
+  };
+
   // Đăng xuất
   const logout = async () => {
     await authApi.logout();
@@ -126,6 +133,7 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
+    loginWithGoogle,
     logout,
     submitScore,
     buySkin,

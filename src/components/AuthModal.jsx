@@ -1,27 +1,79 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\components\AuthModal.jsx
 // Modal Đăng nhập / Đăng ký tài khoản với Tailwind CSS v4
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import BirdEyeIcon from './BirdEyeIcon.jsx';
 
 export default function AuthModal({ isOpen, onClose }) {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [registeredName, setRegisteredName] = useState('');
+  const [success, setSuccess] = useState(null); // { mode: 'login' | 'register', name }
+  const googleBtnRef = useRef(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Khởi tạo nút "Đăng nhập bằng Google" (Google Identity Services)
+  useEffect(() => {
+    if (!isOpen || !googleClientId) return;
+
+    const handleCredential = async (response) => {
+      if (!response?.credential) return;
+      setError('');
+      setLoading(true);
+      try {
+        const loggedUser = await loginWithGoogle(response.credential);
+        setSuccess({
+          mode: 'login',
+          name: (loggedUser?.username || '').split('@')[0] || 'bạn',
+        });
+      } catch (err) {
+        setError(err.message || 'Đăng nhập Google thất bại!');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const initGoogle = () => {
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleCredential,
+        locale: 'vi',
+      });
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'filled_black',
+        size: 'large',
+        width: 320,
+        text: 'continue_with',
+        shape: 'pill',
+        locale: 'vi',
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
+    } else if (!document.getElementById('google-gsi-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogle;
+      document.body.appendChild(script);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, googleClientId]);
 
   if (!isOpen) return null;
 
   // Đóng thông báo thành công và vào game
   const handleStartGame = () => {
-    setRegistered(false);
-    setRegisteredName('');
+    setSuccess(null);
     setUsername('');
     setPassword('');
     setShowPassword(false);
@@ -29,17 +81,24 @@ export default function AuthModal({ isOpen, onClose }) {
     onClose();
   };
 
-  // Màn hình thông báo đăng ký thành công (trước khi chuyển vào game)
-  if (registered) {
+  // Màn hình thông báo đăng nhập/đăng ký thành công (trước khi vào game)
+  if (success) {
+    const isRegister = success.mode === 'register';
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
         <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl text-center">
           <div className="text-5xl">🎉</div>
-          <h2 className="mt-3 text-xl font-bold text-emerald-400">Đăng Ký Thành Công!</h2>
+          <h2 className="mt-3 text-xl font-bold text-emerald-400">
+            {isRegister ? 'Đăng Ký Thành Công!' : 'Đăng Nhập Thành Công!'}
+          </h2>
           <p className="mt-2 text-sm text-slate-300">
-            Chào mừng <b className="text-amber-400">{registeredName}</b>!
+            Chào mừng <b className="text-amber-400">{success.name}</b>!
           </p>
-          <p className="mt-1 text-xs text-slate-400">Bạn được tặng 50 xu và skin mặc định.</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {isRegister
+              ? 'Bạn được tặng 50 xu và skin mặc định.'
+              : 'Chúc bạn chơi game vui vẻ!'}
+          </p>
           <button
             onClick={handleStartGame}
             className="mt-5 w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 shadow-lg transition hover:bg-amber-400 active:scale-98 cursor-pointer"
@@ -101,16 +160,12 @@ export default function AuthModal({ isOpen, onClose }) {
     try {
       if (isLoginTab) {
         await login(username.trim(), password);
-        // Đăng nhập: đóng modal và vào game ngay
-        onClose();
-        setUsername('');
-        setPassword('');
-        setShowPassword(false);
+        // Đăng nhập: hiện thông báo thành công trước khi vào game
+        setSuccess({ mode: 'login', name: username.trim().split('@')[0] });
       } else {
         // Đăng ký: hiện thông báo thành công trước khi vào game
         await register(username.trim(), password);
-        setRegisteredName(username.trim());
-        setRegistered(true);
+        setSuccess({ mode: 'register', name: username.trim().split('@')[0] });
       }
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra, vui lòng thử lại!');
@@ -227,6 +282,22 @@ export default function AuthModal({ isOpen, onClose }) {
             {loading ? 'Đang xử lý...' : isLoginTab ? 'Đăng Nhập Ngay' : 'Đăng Ký & Nhận Quà'}
           </button>
         </form>
+
+        {/* Đăng nhập bằng Google */}
+        {googleClientId ? (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <span className="h-px flex-1 bg-slate-700" />
+              <span>hoặc</span>
+              <span className="h-px flex-1 bg-slate-700" />
+            </div>
+            <div ref={googleBtnRef} className="mt-3 flex justify-center" />
+          </div>
+        ) : (
+          <p className="mt-3 text-center text-[11px] text-slate-500">
+            (Chưa cấu hình đăng nhập Google — thiếu VITE_GOOGLE_CLIENT_ID)
+          </p>
+        )}
       </div>
     </div>
   );

@@ -68,6 +68,9 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
     let raf;
     let prev = performance.now();
     let acc = 0;
+    // Trạng thái trước bước vật lý gần nhất (giữ qua các frame để nội suy)
+    let prevY = g.y;
+    let prevVy = g.vy;
     let shown = g.phase + g.score;
     let lastPhase = g.phase;
 
@@ -77,12 +80,22 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
       prev = now;
 
       while (acc >= DT) {
+        prevY = g.y;
+        prevVy = g.vy;
         step(g, DT, calm);
         acc -= DT;
       }
 
+      // Nội suy vị trí & vận tốc giữa 2 bước vật lý -> chuyển động mượt
+      const alpha = Math.min(acc / DT, 1);
+      const renderG = {
+        ...g,
+        y: prevY + (g.y - prevY) * alpha,
+        vy: prevVy + (g.vy - prevVy) * alpha,
+      };
+
       // Vẽ Canvas với theme màu và skin đang chọn
-      draw(ctx, g, colors, activeSkinRef.current);
+      draw(ctx, renderG, colors, activeSkinRef.current);
 
       // Kích hoạt khi chim chết (chuyển sang 'dead')
       if (lastPhase !== 'dead' && g.phase === 'dead') {

@@ -79,6 +79,16 @@ async function authenticate(endpoint, username, password) {
 export const authApi = {
   register: (username, password) => authenticate('/auth/register', username, password),
   login: (username, password) => authenticate('/auth/login', username, password),
+  googleLogin: async (credential) => {
+    const data = await apiRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+      authenticated: false,
+    });
+    const user = normalizeUser(data?.user);
+    saveSession(data?.token, user);
+    return { ...data, token: data.token, user };
+  },
   getCurrentUser: async () => {
     if (!getToken()) return null;
     const data = await apiRequest('/auth/me');

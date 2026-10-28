@@ -21,10 +21,10 @@ function toPublic(row, ownedSkins = ['default']) {
 }
 
 // Tạo tài khoản mới và trả về user vừa tạo
-async function createUser({ username, passwordHash, coins = 0, currentSkinId = null }) {
+async function createUser({ username, passwordHash, coins = 0, currentSkinId = null, googleId = null }) {
   const [result] = await db.execute(
-    'INSERT INTO USERS (Username, PasswordHash, CurrentSkinID, Coins) VALUES (?, ?, ?, ?)',
-    [username, passwordHash, currentSkinId, coins]
+    'INSERT INTO USERS (Username, PasswordHash, GoogleID, CurrentSkinID, Coins) VALUES (?, ?, ?, ?, ?)',
+    [username, passwordHash, googleId, currentSkinId, coins]
   );
   return findById(result.insertId);
 }
@@ -95,10 +95,32 @@ async function getOwnedSkins(userId) {
   return rows.map((r) => r.SkinCode);
 }
 
+// Tìm user theo GoogleID
+async function findByGoogleId(googleId) {
+  const [rows] = await db.execute(
+    `SELECT USERS.*, SKINS.SkinCode AS CurrentSkinCode,
+      (SELECT COALESCE(MAX(GAME_RESULTS.Score), 0)
+       FROM GAME_RESULTS
+       WHERE GAME_RESULTS.UserID = USERS.UserID) AS BestScore
+     FROM USERS
+     LEFT JOIN SKINS ON USERS.CurrentSkinID = SKINS.SkinID
+     WHERE GoogleID = ? LIMIT 1`,
+    [googleId]
+  );
+  return rows[0] || null;
+}
+
+// Gắn GoogleID cho tài khoản đã tồn tại (liên kết theo email)
+async function linkGoogleId(userId, googleId) {
+  await db.execute('UPDATE USERS SET GoogleID = ? WHERE UserID = ?', [googleId, userId]);
+}
+
 module.exports = {
   createUser,
   findByUsername,
   findById,
+  findByGoogleId,
+  linkGoogleId,
   addOwnedSkin,
   updateCoins,
   updateCurrentSkin,

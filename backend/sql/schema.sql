@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS USERS (
     UserID        BIGINT       NOT NULL AUTO_INCREMENT,
     Username      VARCHAR(30)  NOT NULL,
     PasswordHash  VARCHAR(255) NOT NULL,
+    GoogleID      VARCHAR(255) NULL,
     CurrentSkinID BIGINT       NULL,
     Coins         INT          NOT NULL DEFAULT 0,
     CreatedAt     DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS USERS (
 
     PRIMARY KEY (UserID),
     UNIQUE KEY uq_users_username (Username),
+    UNIQUE KEY uq_users_googleid (GoogleID),
     CONSTRAINT CK_USERS_Coins CHECK (Coins >= 0),
     CONSTRAINT FK_USERS_SKINS FOREIGN KEY (CurrentSkinID)
         REFERENCES SKINS (SkinID)

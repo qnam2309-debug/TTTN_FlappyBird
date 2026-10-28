@@ -4,6 +4,8 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Skin = require('../models/Skin');
 
@@ -160,4 +162,90 @@ exports.logout = (req, res) => {
     success: true,
     message: 'Đăng xuất thành công!',
   });
+};
+
+// 5. POST /api/auth/google - Đăng nhập/Đăng ký bằng Google
+exports.googleLogin = async (req, res, next) => {
+  try {
+    const credential = req.body.credential;
+    if (!credential) {
+      return res.status(400).json({ success: false, message: 'Thiếu Google credential!' });
+    }
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server chưa cấu hình GOOGLE_CLIENT_ID!',
+      });
+    }
+
+    // Xác thực ID token do Google phát hành
+    let payload;
+    try {
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      return res.status(401).json({ success: false, message: 'Google token không hợp lệ!' });
+    }
+
+    const email = (payload?.email || '').trim().toLowerCase();
+    const googleId = payload?.sub;
+
+    if (!email || !googleId || !payload.email_verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email Google chưa được xác thực!',
+      });
+    }
+    if (email.length > 30) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email Google quá dài (tối đa 30 ký tự) để dùng làm tên đăng nhập!',
+      });
+    }
+
+    // Tìm theo GoogleID trước, rồi theo email
+    let user = await User.findByGoogleId(googleId);
+    if (!user) {
+      user = await User.findByUsername(email);
+      if (user) {
+        // Liên kết tài khoản email đã có với Google
+        await User.linkGoogleId(user.UserID, googleId);
+        user = await User.findById(user.UserID);
+      }
+    }
+
+    // Chưa có tài khoản -> tạo mới
+    if (!user) {
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+      const defaultSkin = await Skin.findByCode('default');
+      const defaultSkinId = defaultSkin ? defaultSkin.SkinID : null;
+
+      user = await User.createUser({
+        username: email,
+        passwordHash,
+        coins: 50,
+        currentSkinId: defaultSkinId,
+        googleId,
+      });
+
+      if (defaultSkinId) {
+        await User.addOwnedSkin(user.UserID, defaultSkinId);
+      }
+    }
+
+    const token = signToken(user);
+    const ownedSkins = await User.getOwnedSkins(user.UserID);
+    return res.json({
+      success: true,
+      token,
+      user: User.toPublic(user, ownedSkins),
+    });
+  } catch (err) {
+    next(err);
+  }
 };
