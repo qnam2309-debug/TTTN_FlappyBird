@@ -5,6 +5,32 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import BirdEyeIcon from './BirdEyeIcon.jsx';
 
+// Chỉ tải Google Identity Services một lần cho toàn trang
+let gsiScriptPromise = null;
+let gsiInitializedClientId = null;
+
+function loadGsiScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (gsiScriptPromise) return gsiScriptPromise;
+
+  gsiScriptPromise = new Promise((resolve) => {
+    const existing = document.getElementById('google-gsi-script');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'google-gsi-script';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+
+  return gsiScriptPromise;
+}
+
 export default function AuthModal({ isOpen, onClose }) {
   const { login, register, loginWithGoogle } = useAuth();
   const [isLoginTab, setIsLoginTab] = useState(true);
@@ -17,11 +43,10 @@ export default function AuthModal({ isOpen, onClose }) {
   const googleBtnRef = useRef(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  // Khởi tạo nút "Đăng nhập bằng Google" (Google Identity Services)
+  // Luôn giữ callback mới nhất để GIS chỉ cần initialize một lần
+  const credentialHandlerRef = useRef(null);
   useEffect(() => {
-    if (!isOpen || !googleClientId) return;
-
-    const handleCredential = async (response) => {
+    credentialHandlerRef.current = async (response) => {
       if (!response?.credential) return;
       setError('');
       setLoading(true);
@@ -37,14 +62,25 @@ export default function AuthModal({ isOpen, onClose }) {
         setLoading(false);
       }
     };
+  });
 
-    const initGoogle = () => {
-      if (!window.google?.accounts?.id || !googleBtnRef.current) return;
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleCredential,
-        locale: 'vi',
-      });
+  // Khởi tạo nút "Đăng nhập bằng Google" (chỉ initialize một lần mỗi Client ID)
+  useEffect(() => {
+    if (!isOpen || !googleClientId) return;
+    let cancelled = false;
+
+    const renderButton = () => {
+      if (cancelled || !window.google?.accounts?.id || !googleBtnRef.current) return;
+
+      if (gsiInitializedClientId !== googleClientId) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response) => credentialHandlerRef.current?.(response),
+          locale: 'vi',
+        });
+        gsiInitializedClientId = googleClientId;
+      }
+
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: 'filled_black',
         size: 'large',
@@ -56,16 +92,14 @@ export default function AuthModal({ isOpen, onClose }) {
     };
 
     if (window.google?.accounts?.id) {
-      initGoogle();
-    } else if (!document.getElementById('google-gsi-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-gsi-script';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initGoogle;
-      document.body.appendChild(script);
+      renderButton();
+    } else {
+      loadGsiScript().then(renderButton);
     }
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, googleClientId]);
 
