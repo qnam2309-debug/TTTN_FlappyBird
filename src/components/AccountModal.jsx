@@ -1,13 +1,13 @@
 // src/components/AccountModal.jsx
-// Modal "Account Info": hiển thị thông tin tài khoản lấy từ backend/DB.
+// Modal "Account Info" phong cách 2D Pixel Retro, đồng bộ với màn hình chính.
 
 import { useAuth } from '../context/AuthContext.jsx';
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg bg-slate-800/50 px-3 py-2">
-      <span className="shrink-0 text-slate-400">{label}</span>
-      <span className="break-all text-right font-semibold text-white">{value}</span>
+    <div className="flex items-start justify-between gap-3 border-2 border-black bg-amber-100 px-2 py-1.5">
+      <span className="shrink-0 text-[9px] font-black text-slate-700">{label}</span>
+      <span className="break-all text-right text-[9px] font-black text-black">{value}</span>
     </div>
   );
 }
@@ -23,19 +23,20 @@ export default function AccountModal({ isOpen, onClose }) {
     : '—';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 font-sans backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h2 className="text-xl font-bold text-amber-400">Thông tin tài khoản</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md bg-amber-200 pixel-box p-4 sm:p-6">
+        <div className="flex items-center justify-between border-b-4 border-black pb-3">
+          <h2 className="text-sm font-black text-black sm:text-base">Thông tin tài khoản</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            aria-label="Đóng"
+            className="bg-rose-400 hover:bg-rose-300 pixel-btn px-2 py-1 text-[10px] font-black text-black cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        <div className="mt-4 space-y-2 text-sm">
+        <div className="mt-4 space-y-2">
           <Row label="ID" value={`#${user.id}`} />
           <Row label="Email" value={email} />
           <Row label="Tên hiển thị" value={displayName} />
