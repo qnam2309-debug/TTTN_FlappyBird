@@ -82,8 +82,18 @@ module.exports = {
         type: 'object',
         required: ['username', 'password'],
         properties: {
-          username: { type: 'string', example: 'player1' },
-          password: { type: 'string', format: 'password', example: '123456' },
+          username: {
+            type: 'string',
+            example: 'player1@example.com',
+            description: 'Email, tối đa 30 ký tự, không khoảng trắng.',
+          },
+          password: {
+            type: 'string',
+            format: 'password',
+            example: 'Abc12345',
+            description:
+              'Đúng 8 ký tự, có ít nhất 1 chữ cái và 1 chữ số, không khoảng trắng.',
+          },
         },
       },
       AuthResponse: {

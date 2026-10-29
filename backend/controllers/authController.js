@@ -29,13 +29,12 @@ function validateCredentials(username, password) {
     return 'Tên đăng nhập phải là địa chỉ email hợp lệ (không chứa khoảng trắng)!';
   }
 
-  // Password: tối đa 8 ký tự, có in hoa + thường + ký tự đặc biệt, không khoảng trắng
+  // Password: đúng 8 ký tự, có ít nhất 1 chữ cái + 1 chữ số, không khoảng trắng
   if (!password) return 'Vui lòng nhập mật khẩu!';
-  if (password.length > 8) return 'Mật khẩu tối đa 8 ký tự!';
+  if (password.length !== 8) return 'Mật khẩu phải có đúng 8 ký tự!';
   if (/\s/.test(password)) return 'Mật khẩu không được chứa khoảng trắng!';
-  if (!/[A-Z]/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ in hoa!';
-  if (!/[a-z]/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ thường!';
-  if (!/[^A-Za-z0-9]/.test(password)) return 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt!';
+  if (!/[A-Za-z]/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ cái!';
+  if (!/\d/.test(password)) return 'Mật khẩu phải chứa ít nhất một chữ số!';
 
   return null;
 }

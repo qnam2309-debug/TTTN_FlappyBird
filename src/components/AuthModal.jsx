@@ -168,24 +168,20 @@ export default function AuthModal({ isOpen, onClose }) {
 
     // Chỉ kiểm tra độ phức tạp mật khẩu khi ĐĂNG KÝ (không áp dụng khi đăng nhập)
     if (!isLoginTab) {
-      if (password.length > 8) {
-        setError('Mật khẩu tối đa 8 ký tự!');
+      if (password.length !== 8) {
+        setError('Mật khẩu phải có đúng 8 ký tự!');
         return;
       }
       if (/\s/.test(password)) {
         setError('Mật khẩu không được chứa khoảng trắng!');
         return;
       }
-      if (!/[A-Z]/.test(password)) {
-        setError('Mật khẩu phải chứa ít nhất một chữ in hoa!');
+      if (!/[A-Za-z]/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất một chữ cái!');
         return;
       }
-      if (!/[a-z]/.test(password)) {
-        setError('Mật khẩu phải chứa ít nhất một chữ thường!');
-        return;
-      }
-      if (!/[^A-Za-z0-9]/.test(password)) {
-        setError('Mật khẩu phải chứa ít nhất một ký tự đặc biệt!');
+      if (!/\d/.test(password)) {
+        setError('Mật khẩu phải chứa ít nhất một chữ số!');
         return;
       }
     }
@@ -298,6 +294,11 @@ export default function AuthModal({ isOpen, onClose }) {
                 <BirdEyeIcon covered={!showPassword} size={24} />
               </button>
             </div>
+            {!isLoginTab && (
+              <p className="mt-1 text-[8px] font-black leading-relaxed text-slate-600">
+                8 ký tự, gồm chữ và số, không khoảng trắng
+              </p>
+            )}
           </div>
 
           {!isLoginTab && (
