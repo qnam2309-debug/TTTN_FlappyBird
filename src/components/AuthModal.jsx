@@ -84,9 +84,9 @@ export default function AuthModal({ isOpen, onClose }) {
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: 'filled_black',
         size: 'large',
-        width: 320,
+        width: 300,
         text: 'continue_with',
-        shape: 'pill',
+        shape: 'rectangular',
         locale: 'vi',
       });
     };
@@ -209,33 +209,33 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 font-sans backdrop-blur-xs">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-sm bg-amber-200 pixel-box p-4 sm:p-6">
         {/* Nút đóng */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <h2 className="text-xl font-bold text-amber-400">
+        <div className="flex items-center justify-between gap-3 border-b-4 border-black pb-3">
+          <h2 className="min-w-0 flex-1 break-words text-sm font-black leading-tight text-black">
             {isLoginTab ? 'Đăng Nhập Tài Khoản' : 'Tạo Tài Khoản Mới'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            aria-label="Đóng"
+            className="shrink-0 cursor-pointer bg-rose-400 px-2 py-1 text-[10px] font-black text-black pixel-btn hover:bg-rose-300"
           >
             ✕
           </button>
         </div>
 
         {/* Tab chuyển đổi Đăng nhập / Đăng ký */}
-        <div className="mt-4 flex rounded-xl bg-slate-800 p-1">
+        <div className="mt-3 grid grid-cols-2 gap-1.5">
           <button
             type="button"
             onClick={() => {
               setIsLoginTab(true);
               setError('');
             }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition cursor-pointer ${
-              isLoginTab
-                ? 'bg-amber-500 text-slate-950 shadow'
-                : 'text-slate-400 hover:text-white'
+            className={`pixel-btn cursor-pointer py-1.5 text-[9px] font-black ${
+              isLoginTab ? 'bg-amber-400 text-black' : 'bg-amber-100 text-slate-700 hover:bg-amber-50'
             }`}
           >
             Đăng Nhập
@@ -246,10 +246,8 @@ export default function AuthModal({ isOpen, onClose }) {
               setIsLoginTab(false);
               setError('');
             }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition cursor-pointer ${
-              !isLoginTab
-                ? 'bg-amber-500 text-slate-950 shadow'
-                : 'text-slate-400 hover:text-white'
+            className={`pixel-btn cursor-pointer py-1.5 text-[9px] font-black ${
+              !isLoginTab ? 'bg-amber-400 text-black' : 'bg-amber-100 text-slate-700 hover:bg-amber-50'
             }`}
           >
             Đăng Ký
@@ -258,15 +256,15 @@ export default function AuthModal({ isOpen, onClose }) {
 
         {/* Thông báo lỗi nếu có */}
         {error && (
-          <div className="mt-3 rounded-lg bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-400 text-center">
+          <div className="mt-3 border-2 border-black bg-rose-200 p-2 text-center text-[9px] font-black leading-relaxed text-rose-700">
             {error}
           </div>
         )}
 
         {/* Form nhập liệu */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-3 space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="mb-1 block text-[9px] font-black text-slate-700">
               Email (Tên đăng nhập)
             </label>
             <input
@@ -274,12 +272,12 @@ export default function AuthModal({ isOpen, onClose }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Nhập email đăng nhập..."
-              className="w-full rounded-xl border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
+              className="w-full border-2 border-black bg-amber-100 px-2.5 py-2 text-[10px] font-black text-black placeholder:text-slate-500 focus:bg-amber-50 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
+            <label className="mb-1 block text-[9px] font-black text-slate-700">
               Mật khẩu
             </label>
             <div className="relative">
@@ -288,12 +286,12 @@ export default function AuthModal({ isOpen, onClose }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Nhập mật khẩu..."
-                className="w-full rounded-xl border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 pr-11 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
+                className="w-full border-2 border-black bg-amber-100 px-2.5 py-2 pr-10 text-[10px] font-black text-black placeholder:text-slate-500 focus:bg-amber-50 focus:outline-hidden"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-amber-400 transition cursor-pointer"
+                className="absolute inset-y-0 right-0 flex cursor-pointer items-center px-2 text-slate-700 transition hover:text-rose-600"
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
@@ -303,7 +301,7 @@ export default function AuthModal({ isOpen, onClose }) {
           </div>
 
           {!isLoginTab && (
-            <p className="text-xs text-emerald-400">
+            <p className="border-2 border-black bg-emerald-200 px-2 py-1.5 text-[9px] font-black leading-relaxed text-emerald-800">
               🎁 Tặng ngay 50 Xu khi đăng ký tài khoản mới!
             </p>
           )}
@@ -311,7 +309,7 @@ export default function AuthModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 shadow-lg transition hover:bg-amber-400 active:scale-98 disabled:opacity-50 cursor-pointer"
+            className="w-full cursor-pointer bg-emerald-400 py-2.5 text-[10px] font-black text-black pixel-btn hover:bg-emerald-300 disabled:opacity-60"
           >
             {loading ? 'Đang xử lý...' : isLoginTab ? 'Đăng Nhập Ngay' : 'Đăng Ký & Nhận Quà'}
           </button>
@@ -319,16 +317,16 @@ export default function AuthModal({ isOpen, onClose }) {
 
         {/* Đăng nhập bằng Google */}
         {googleClientId ? (
-          <div className="mt-4">
-            <div className="flex items-center gap-2 text-[11px] text-slate-500">
-              <span className="h-px flex-1 bg-slate-700" />
+          <div className="mt-3">
+            <div className="flex items-center gap-2 text-[8px] font-black text-slate-600">
+              <span className="h-0.5 flex-1 bg-black/40" />
               <span>hoặc</span>
-              <span className="h-px flex-1 bg-slate-700" />
+              <span className="h-0.5 flex-1 bg-black/40" />
             </div>
-            <div ref={googleBtnRef} className="mt-3 flex justify-center" />
+            <div ref={googleBtnRef} className="mt-2 flex justify-center" />
           </div>
         ) : (
-          <p className="mt-3 text-center text-[11px] text-slate-500">
+          <p className="mt-3 text-center text-[8px] font-black leading-relaxed text-slate-600">
             (Chưa cấu hình đăng nhập Google — thiếu VITE_GOOGLE_CLIENT_ID)
           </p>
         )}
