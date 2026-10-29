@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { draw, readColors } from './draw.js';
 import { DT, flap, newGame, reset, step } from './game.js';
+import { saveRun, restoreRun, clearRun } from './resume.js';
 
 const BEST_KEY = 'flappy-best';
 
@@ -18,6 +19,8 @@ function readBest() {
 
 const initialBest = readBest();
 const initialGame = newGame(initialBest);
+const restored = restoreRun(initialGame);
+if (!restored && typeof navigator !== 'undefined' && !navigator.onLine) initialGame.paused = true;
 
 export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBestScore = null) {
   const game = useRef(initialGame);
@@ -28,6 +31,7 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
     newBest: initialGame.newBest,
   });
 
+  const [network, setNetwork] = useState(() => ({offline: typeof navigator !== 'undefined' && !navigator.onLine, countdown: null, restored}));
   const onGameOverRef = useRef(onGameOver);
   const activeSkinRef = useRef(activeSkin);
 
@@ -57,6 +61,37 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
     const onTheme = () => readColors(colors);
     dark.addEventListener('change', onTheme);
 
+    let countdownTimer = null;
+    let remaining = 3;
+    const pauseOffline = () => {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      g.paused = true;
+      saveRun(g);
+      setNetwork({offline:true, countdown:null, restored:false});
+    };
+    const resumeOnline = () => {
+      if (!g.paused || !navigator.onLine) return;
+      clearInterval(countdownTimer);
+      remaining = 3;
+      setNetwork({offline:false, countdown:remaining, restored:false});
+      countdownTimer = setInterval(() => {
+        if (!navigator.onLine) { pauseOffline(); return; }
+        remaining--;
+        if (remaining === 0) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          g.paused = false;
+          setNetwork({offline:false, countdown:null, restored:false});
+        } else setNetwork({offline:false, countdown:remaining, restored:false});
+      }, 1000);
+    };
+    window.addEventListener('offline', pauseOffline);
+    window.addEventListener('online', resumeOnline);
+    if (!navigator.onLine) pauseOffline();
+    else if (g.paused) resumeOnline();
+    let lastSaved = performance.now();
+
     // Bắt phím Space hoặc Mũi tên lên để đập cánh
     const onKey = (e) => {
       if (e.code !== 'Space' && e.code !== 'ArrowUp') return;
@@ -81,11 +116,16 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
         acc -= DT;
       }
 
+      if (now - lastSaved >= 1000) {
+        lastSaved = now;
+        if (g.phase === 'play') saveRun(g);
+      }
       // Vẽ Canvas với theme màu và skin đang chọn
       draw(ctx, g, colors, activeSkinRef.current);
 
       // Kích hoạt khi chim chết (chuyển sang 'dead')
       if (lastPhase !== 'dead' && g.phase === 'dead') {
+        clearRun();
         onGameOverRef.current?.(g.score);
       }
       lastPhase = g.phase;
@@ -109,6 +149,10 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
 
     return () => {
       cancelAnimationFrame(raf);
+      clearInterval(countdownTimer);
+      saveRun(g);
+      window.removeEventListener('offline', pauseOffline);
+      window.removeEventListener('online', resumeOnline);
       window.removeEventListener('keydown', onKey);
       dark.removeEventListener('change', onTheme);
     };
@@ -130,5 +174,5 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
       ? Math.max(Number(userBestScore) || 0, hud.score)
       : hud.best;
 
-  return [{ ...hud, best: effectiveBest }, () => flap(game.current), () => reset(game.current)];
+  return [{ ...hud, ...network, best: effectiveBest }, () => flap(game.current), () => { clearRun(); reset(game.current); }];
 }

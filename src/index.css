@@ -10,11 +10,31 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  font-family: 'Press Start 2P', monospace, cursive;
 }
 
 body {
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
-  background-color: #0f172a;
+  background-color: #0c1017;
+  image-rendering: pixelated;
+}
+
+/* Nút bấm & hộp thoại chuẩn phong cách Pixel Retro */
+.pixel-box {
+  border: 4px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  image-rendering: pixelated;
+}
+
+.pixel-btn {
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0px #000;
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000;
 }
