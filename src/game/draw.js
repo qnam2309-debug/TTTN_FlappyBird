@@ -1,166 +1,422 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\game\draw.js
-// Phụ trách vẽ Canvas 2D: Hỗ trợ Theme Ngày/Đêm và Skin trang phục chim
+// Phụ trách vẽ Canvas 2D PIXEL ART (Phong cách Retro 8-bit nguyên bản)
+// Hỗ trợ đổi 4 mùa Xuân - Hạ - Thu - Đông mượt mà (chuyển màu mềm mại)
+// Tạm thời hạ mốc đổi mùa xuống 3 điểm/mùa để test
 
-import { BIRD_X, GAP, GROUND, H, PIPE_W, R, W } from './game.js';
+import { BIRD_X, GAP, GROUND, H, PIPE_W, W } from './game.js';
 
-// Bảng màu mặc định (Theme ban ngày)
+export const POINTS_PER_SEASON = 10; // 10 điểm/mùa (Xuân: 0-9, Hạ: 10-19, Thu: 20-29, Đông: 30-39 -> lặp lại)
+
+// Cấu hình bảng màu RGB & đặc trưng chi tiết 4 MÙA
+export const SEASONS = [
+  {
+    name: 'Xuân',
+    sky: [100, 205, 230],       // Xanh ngọc tươi mát mùa xuân
+    skyBottom: [200, 240, 230],
+    cloud: [255, 255, 255],
+    hillBack: [120, 215, 140],
+    hillFront: [85, 195, 105],
+    pipe: '#68b828',
+    pipeLight: '#94e048',
+    pipeDark: '#447814',
+    ground: [222, 216, 149],
+    grass: [117, 190, 47],
+    grassDark: [85, 128, 34],
+    groundStripe: [184, 148, 79],
+    type: 'spring',
+  },
+  {
+    name: 'Hạ',
+    sky: [40, 160, 235],        // Bầu trời hè xanh ngắt rực nắng
+    skyBottom: [140, 215, 255],
+    cloud: [255, 255, 255],
+    hillBack: [55, 175, 75],    // Cây cối xanh mướt rậm rạp
+    hillFront: [30, 145, 50],
+    pipe: '#55a822',
+    pipeLight: '#80d840',
+    pipeDark: '#336a10',
+    ground: [230, 210, 135],
+    grass: [45, 160, 50],
+    grassDark: [25, 100, 30],
+    groundStripe: [175, 140, 65],
+    type: 'summer',
+  },
+  {
+    name: 'Thu',
+    sky: [235, 130, 65],        // Hoàng hôn chiều thu cam vàng ấm áp
+    skyBottom: [250, 200, 120],
+    cloud: [255, 230, 205],
+    hillBack: [210, 115, 40],   // Rừng phong ngả vàng cam
+    hillFront: [175, 80, 20],
+    pipe: '#b5651d',            // Ống nước màu lá úa
+    pipeLight: '#e08e45',
+    pipeDark: '#783e0a',
+    ground: [210, 170, 115],
+    grass: [195, 110, 30],      // Cỏ vàng lá rụng
+    grassDark: [130, 70, 15],
+    groundStripe: [155, 110, 60],
+    type: 'autumn',
+  },
+  {
+    name: 'Đông',
+    sky: [100, 130, 160],       // Bầu trời đông xám lạnh mờ sương
+    skyBottom: [190, 210, 225],
+    cloud: [225, 235, 245],
+    hillBack: [185, 205, 220],  // Núi phủ tuyết trắng xóa
+    hillFront: [230, 242, 250],
+    pipe: '#4a8296',            // Ống nước đóng băng xanh tuyết
+    pipeLight: '#8ec4d8',
+    pipeDark: '#2a5463',
+    ground: [205, 220, 232],    // Đất đóng băng tuyết
+    grass: [255, 255, 255],     // Tuyết trắng phủ kín
+    grassDark: [150, 175, 195],
+    groundStripe: [140, 160, 180],
+    type: 'winter',
+  },
+];
+
+// Hàm chuyển tiếp màu sắc mượt mà (Lerp RGB Color)
+function lerpColor(c1, c2, t) {
+  const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+  const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+  const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+// Biến lưu trữ trạng thái chuyển mùa mượt theo thời gian thực
+let currentSeasonIdx = 0;
+let transitionProgress = 1; // 0 -> 1 (hoàn thành)
+let prevSeasonIdx = 0;
+
 export const DEFAULT_COLORS = {
-  skyTop: '#8fd3e8',
-  skyBottom: '#dff3e4',
-  orb: '#fff3b0',
-  cloud: '#ffffff',
-  hill: '#9fd6b0',
-  pipe: '#2f9e6e',
-  pipeLight: '#6fd0a0',
-  pipeDark: '#1c6b4a',
-  ground: '#e6c98a',
-  groundDark: '#b8944f',
-  grass: '#86c95c',
-  bird: '#ffb52e',
-  wing: '#ffd77a',
-  beak: '#ef5a3c',
-  eye: '#ffffff',
-  outline: '#1d2b33',
+  bird: '#f8e038',
+  wing: '#ffffff',
+  beak: '#f85820',
+  outline: '#000000',
 };
 
-const COLOR_KEYS = Object.keys(DEFAULT_COLORS);
+// Ma trận điểm ảnh chú chim Pixel (17 x 12 pixel)
+const BIRD_PIXEL_MAP = [
+  [0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+  [0,0,0,0,1,1,2,2,2,1,5,5,1,0,0,0,0],
+  [0,0,0,1,2,2,2,2,1,5,5,1,5,1,0,0,0],
+  [0,0,1,2,2,2,2,2,1,5,5,1,5,1,0,0,0],
+  [0,1,2,2,2,2,2,2,2,1,5,5,5,1,0,0,0],
+  [0,1,6,6,6,6,2,2,2,2,1,1,1,1,1,1,0],
+  [1,6,6,6,6,6,6,2,2,1,4,4,4,4,4,1,0],
+  [1,6,6,6,6,6,6,2,1,4,4,4,4,4,4,4,1],
+  [1,2,6,6,6,6,2,2,1,4,4,1,1,1,1,1,0],
+  [0,1,2,2,2,2,2,1,4,4,4,4,4,4,1,0,0],
+  [0,0,1,1,3,3,3,1,4,4,4,4,1,1,0,0,0],
+  [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0],
+];
 
-// Đọc mã màu từ CSS variables nếu có
 export function readColors(into = { ...DEFAULT_COLORS }) {
-  if (typeof document === 'undefined') return into;
-  const css = getComputedStyle(document.documentElement);
-  for (const k of COLOR_KEYS) {
-    const cssVarName = '--' + k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-    const val = css.getPropertyValue(cssVarName).trim();
-    if (val) into[k] = val;
-  }
   return into;
 }
 
-// Hàm vẽ chính trên Canvas mỗi khung hình
 export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
-  // Tự động scale độ phân giải Canvas cho sắc nét trên màn hình Retina / điện thoại
   const k = ctx.canvas.width / W;
   ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.imageSmoothingEnabled = false;
 
-  // Áp dụng màu skin trang phục nếu người chơi đã chọn trong Shop
-  const birdColor = activeSkin?.bird || themeColors.bird;
-  const wingColor = activeSkin?.wing || themeColors.wing;
-  const beakColor = activeSkin?.beak || themeColors.beak;
+  // Tính toán mùa mục tiêu theo điểm số
+  const targetSeasonIdx = Math.floor(g.score / POINTS_PER_SEASON) % 4;
 
-  const circle = (x, y, r) => {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 7);
-    ctx.fill();
-  };
+  // Xử lý hiệu ứng chuyển màu mượt mà (Fade transition trong 1.5 giây)
+  if (targetSeasonIdx !== currentSeasonIdx) {
+    if (transitionProgress >= 1) {
+      prevSeasonIdx = currentSeasonIdx;
+      currentSeasonIdx = targetSeasonIdx;
+      transitionProgress = 0;
+    }
+  }
 
-  const pipe = (x, y, len, capAtBottom) => {
-    ctx.fillStyle = themeColors.pipe;
-    ctx.fillRect(x, y, PIPE_W, len);
-    ctx.fillStyle = themeColors.pipeLight;
-    ctx.fillRect(x + 6, y, 8, len);
-    ctx.fillStyle = themeColors.pipeDark;
-    ctx.fillRect(x + PIPE_W - 10, y, 10, len);
-    const cy = capAtBottom ? y + len - 22 : y;
-    ctx.fillRect(x - 4, cy, PIPE_W + 8, 22);
-    ctx.fillStyle = themeColors.pipe;
-    ctx.fillRect(x - 1, cy + 3, PIPE_W + 2, 16);
-    ctx.fillStyle = themeColors.pipeLight;
-    ctx.fillRect(x + 5, cy + 3, 8, 16);
-  };
+  if (transitionProgress < 1) {
+    transitionProgress = Math.min(1, transitionProgress + 0.025);
+  }
 
-  // 1. Vẽ bầu trời (Gradient) và mặt trời/mặt trăng
-  const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-  sky.addColorStop(0, themeColors.skyTop);
-  sky.addColorStop(1, themeColors.skyBottom);
-  ctx.fillStyle = sky;
+  const sFrom = SEASONS[prevSeasonIdx];
+  const sTo = SEASONS[currentSeasonIdx];
+  const t = transitionProgress;
+
+  // Các màu động nội suy mượt mà giữa mùa trước và mùa hiện tại
+  const colorSky = lerpColor(sFrom.sky, sTo.sky, t);
+  const colorSkyBottom = lerpColor(sFrom.skyBottom, sTo.skyBottom, t);
+  const colorCloud = lerpColor(sFrom.cloud, sTo.cloud, t);
+  const colorHillBack = lerpColor(sFrom.hillBack, sTo.hillBack, t);
+  const colorHillFront = lerpColor(sFrom.hillFront, sTo.hillFront, t);
+  const colorGround = lerpColor(sFrom.ground, sTo.ground, t);
+  const colorGrass = lerpColor(sFrom.grass, sTo.grass, t);
+  const colorGrassDark = lerpColor(sFrom.grassDark, sTo.grassDark, t);
+  const colorStripe = lerpColor(sFrom.groundStripe, sTo.groundStripe, t);
+
+  // 1. Nền Bầu trời chuyển đổi mượt
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND);
+  skyGrad.addColorStop(0, colorSky);
+  skyGrad.addColorStop(1, colorSkyBottom);
+  ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, GROUND);
-  ctx.fillStyle = themeColors.orb;
-  circle(285, 92, 26);
 
-  // 2. Vẽ mây trôi Parallax (chậm hơn tốc độ bay)
-  ctx.fillStyle = themeColors.cloud;
-  for (const [bx, by] of [[40, 90], [190, 200], [330, 135]]) {
-    const x = (((bx - g.scroll * 0.15) % (W + 120)) + W + 120) % (W + 120) - 80;
-    circle(x, by, 16);
-    circle(x + 20, by - 9, 21);
-    circle(x + 44, by, 16);
-    ctx.fillRect(x, by, 44, 16);
+  // 2. MÙA HẠ: Vẽ MẶT TRỜI CHÓI CHANG RỰC RỠ + TIA NẮNG
+  if (sTo.type === 'summer' || (sFrom.type === 'summer' && t < 1)) {
+    const sunAlpha = sTo.type === 'summer' ? t : 1 - t;
+    ctx.save();
+    ctx.globalAlpha = sunAlpha;
+
+    const sunX = W - 65;
+    const sunY = 55;
+
+    // Vầng hào quang mặt trời pixel nhấp nháy
+    const pulse = Math.sin(g.t * 3) * 4;
+    ctx.fillStyle = 'rgba(255, 255, 180, 0.35)';
+    ctx.fillRect(sunX - 24 - pulse / 2, sunY - 24 - pulse / 2, 48 + pulse, 48 + pulse);
+    ctx.fillStyle = 'rgba(255, 230, 100, 0.5)';
+    ctx.fillRect(sunX - 16, sunY - 16, 32, 32);
+
+    // Lõi mặt trời vàng cam pixel
+    ctx.fillStyle = '#ffcf33';
+    ctx.fillRect(sunX - 11, sunY - 11, 22, 22);
+    ctx.fillStyle = '#fff480';
+    ctx.fillRect(sunX - 7, sunY - 7, 14, 14);
+
+    // 8 tia nắng pixel tỏa ra xung quanh
+    ctx.fillStyle = '#ffb300';
+    const rayLen = 8 + Math.sin(g.t * 4) * 3;
+    ctx.fillRect(sunX - 2, sunY - 18 - rayLen, 4, rayLen); // Trên
+    ctx.fillRect(sunX - 2, sunY + 18, 4, rayLen);         // Dưới
+    ctx.fillRect(sunX - 18 - rayLen, sunY - 2, rayLen, 4); // Trái
+    ctx.fillRect(sunX + 18, sunY - 2, rayLen, 4);         // Phải
+
+    ctx.restore();
   }
 
-  // 3. Vẽ đồi núi phía sau
-  ctx.fillStyle = themeColors.hill;
-  ctx.beginPath();
-  ctx.moveTo(0, GROUND);
-  for (let x = 0; x <= W; x += 6) {
-    const u = x + g.scroll * 0.3;
-    ctx.lineTo(x, GROUND - 42 - 18 * Math.sin(u / 45) - 7 * Math.sin(u / 17));
+  // 3. Mây trắng chân trời Pixel
+  ctx.fillStyle = colorCloud;
+  for (let cx = -(g.scroll * 0.2 % 120); cx < W + 120; cx += 120) {
+    ctx.fillRect(cx, GROUND - 110, 60, 24);
+    ctx.fillRect(cx + 8, GROUND - 124, 44, 14);
+    ctx.fillRect(cx + 18, GROUND - 134, 24, 10);
   }
-  ctx.lineTo(W, GROUND);
-  ctx.fill();
 
-  // 4. Vẽ các cặp cột ống nước
+  // 4. MÙA ĐÔNG: DÃY NÚI TUYẾT TRẮNG HÙNG VĨ PHÍA XA
+  if (sTo.type === 'winter' || (sFrom.type === 'winter' && t < 1)) {
+    const snowAlpha = sTo.type === 'winter' ? t : 1 - t;
+    ctx.save();
+    ctx.globalAlpha = snowAlpha;
+
+    // Núi tuyết đỉnh nhọn phủ băng
+    const drawSnowMountain = (mx, my, mw, mh) => {
+      ctx.fillStyle = '#a8c6db'; // Thân núi lạnh
+      ctx.beginPath();
+      ctx.moveTo(mx, my);
+      ctx.lineTo(mx + mw / 2, my - mh);
+      ctx.lineTo(mx + mw, my);
+      ctx.closePath();
+      ctx.fill();
+
+      // Mũ tuyết trắng trên đỉnh núi
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(mx + mw / 2, my - mh);
+      ctx.lineTo(mx + mw * 0.35, my - mh * 0.55);
+      ctx.lineTo(mx + mw * 0.5, my - mh * 0.45);
+      ctx.lineTo(mx + mw * 0.65, my - mh * 0.55);
+      ctx.closePath();
+      ctx.fill();
+    };
+
+    drawSnowMountain(15, GROUND - 20, 110, 85);
+    drawSnowMountain(105, GROUND - 20, 140, 110);
+    drawSnowMountain(220, GROUND - 20, 120, 75);
+
+    ctx.restore();
+  }
+
+  // 5. Đồi cây chuyển màu theo mùa
+  ctx.fillStyle = colorHillBack;
+  ctx.fillRect(0, GROUND - 50, W, 50);
+  ctx.fillStyle = colorHillFront;
+  for (let bx = -(g.scroll * 0.4 % 40); bx < W + 40; bx += 40) {
+    ctx.fillRect(bx, GROUND - 65, 24, 15);
+    ctx.fillRect(bx + 4, GROUND - 75, 16, 10);
+  }
+
+  // 6. Vẽ Cột Ống nước (Pipes) dạng 2D Pixel
+  const drawPixelPipe = (x, y, len, isTop) => {
+    if (len <= 0) return;
+    const rimH = 26;
+    const bodyLen = Math.max(0, len - rimH);
+
+    const bodyY = isTop ? y : y + rimH;
+    ctx.fillStyle = sTo.pipe;
+    ctx.fillRect(x, bodyY, PIPE_W, bodyLen);
+
+    ctx.fillStyle = sTo.pipeLight;
+    ctx.fillRect(x + 3, bodyY, 6, bodyLen);
+    ctx.fillRect(x + 11, bodyY, 3, bodyLen);
+
+    ctx.fillStyle = sTo.pipeDark;
+    ctx.fillRect(x + PIPE_W - 8, bodyY, 5, bodyLen);
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x, bodyY, 2, bodyLen);
+    ctx.fillRect(x + PIPE_W - 2, bodyY, 2, bodyLen);
+
+    const rimY = isTop ? y + len - rimH : y;
+    const rimX = x - 3;
+    const rimW = PIPE_W + 6;
+
+    ctx.fillStyle = sTo.pipe;
+    ctx.fillRect(rimX, rimY, rimW, rimH);
+    ctx.fillStyle = sTo.pipeLight;
+    ctx.fillRect(rimX + 4, rimY, 6, rimH);
+    ctx.fillRect(rimX + 12, rimY, 3, rimH);
+    ctx.fillStyle = sTo.pipeDark;
+    ctx.fillRect(rimX + rimW - 9, rimY, 6, rimH);
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(rimX, rimY, rimW, 2);
+    ctx.fillRect(rimX, rimY + rimH - 2, rimW, 2);
+    ctx.fillRect(rimX, rimY, 2, rimH);
+    ctx.fillRect(rimX + rimW - 2, rimY, 2, rimH);
+
+    // MÙA ĐÔNG: Băng tuyết đóng trên vành ống nước
+    if (sTo.type === 'winter') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(rimX + 2, rimY, rimW - 4, 4);
+      // Giọt băng tuyết thòng xuống
+      ctx.fillRect(rimX + 8, rimY + 4, 3, 5);
+      ctx.fillRect(rimX + 20, rimY + 4, 4, 7);
+      ctx.fillRect(rimX + 38, rimY + 4, 3, 4);
+    }
+  };
+
   for (const p of g.pipes) {
-    pipe(p.x, 0, p.top, true);
-    pipe(p.x, p.top + GAP, GROUND - p.top - GAP, false);
+    drawPixelPipe(p.x, 0, p.top, true);
+    drawPixelPipe(p.x, p.top + GAP, GROUND - p.top - GAP, false);
   }
 
-  // 5. Vẽ mặt đất và dải cỏ chuyển động
-  ctx.fillStyle = themeColors.ground;
+  // 7. HIỆU ỨNG THIÊN NHIÊN CHI TIẾT THEO TỪNG MÙA:
+  // - Xuân: Cánh hoa đào hồng bay lượn
+  // - Thu: Lá phong vàng/đỏ xoay rơi
+  // - Đông: Bão tuyết rơi phủ trắng xóa
+  const curType = sTo.type;
+
+  if (curType === 'spring') {
+    // 🌸 MÙA XUÂN: CÁNH HOA ĐÀO RƠI UỐN LƯỢN TRONG GIÓ
+    for (let i = 0; i < 22; i++) {
+      const seed = i * 41;
+      const py = ((g.t * 38 + i * 35) % (GROUND - 10));
+      const sway = Math.sin(g.t * 3 + i * 1.5) * 22;
+      const px = ((seed - g.scroll * 0.35 + sway) % W + W) % W;
+
+      // Cánh hoa đào pixel màu hồng đào phớt
+      ctx.fillStyle = i % 2 === 0 ? '#ffb7c5' : '#ff9ebb';
+      ctx.fillRect(px, py, 3, 3);
+      ctx.fillRect(px + 1, py - 1, 2, 2);
+      ctx.fillStyle = '#ff6b8b';
+      ctx.fillRect(px + 1, py + 1, 1, 1);
+    }
+  } else if (curType === 'autumn') {
+    // 🍂 MÙA THU: LÁ PHONG ĐỎ & LÁ VÀNG XOAY RƠI
+    for (let i = 0; i < 20; i++) {
+      const seed = i * 47;
+      const py = ((g.t * 42 + i * 38) % (GROUND - 10));
+      const sway = Math.sin(g.t * 2.5 + i * 2) * 25;
+      const px = ((seed - g.scroll * 0.4 + sway) % W + W) % W;
+
+      // Lá phong pixel 4x4
+      ctx.fillStyle = i % 3 === 0 ? '#d9381e' : (i % 3 === 1 ? '#e67319' : '#f2aa1f');
+      ctx.fillRect(px, py, 4, 3);
+      ctx.fillRect(px + 1, py - 1, 2, 5);
+      ctx.fillStyle = '#8a2512';
+      ctx.fillRect(px + 2, py + 1, 1, 2); // Cuống lá
+    }
+  } else if (curType === 'winter') {
+    // ❄️ MÙA ĐÔNG: BÔNG TUYẾT TRẮNG RƠI DÀY ĐẶC
+    for (let i = 0; i < 35; i++) {
+      const seed = i * 29;
+      const speed = 40 + (i % 3) * 25;
+      const py = ((g.t * speed + i * 25) % (GROUND - 5));
+      const drift = Math.sin(g.t * 1.8 + i) * 12;
+      const px = ((seed - g.scroll * 0.2 + drift) % W + W) % W;
+
+      ctx.fillStyle = '#ffffff';
+      if (i % 4 === 0) {
+        // Bông tuyết to 3x3 hình chữ thập
+        ctx.fillRect(px + 1, py, 1, 3);
+        ctx.fillRect(px, py + 1, 3, 1);
+      } else {
+        // Bông tuyết nhỏ 2x2
+        ctx.fillRect(px, py, 2, 2);
+      }
+    }
+  }
+
+  // 8. Mặt đất Pixel theo mùa
+  ctx.fillStyle = colorGround;
   ctx.fillRect(0, GROUND, W, H - GROUND);
-  ctx.fillStyle = themeColors.grass;
-  ctx.fillRect(0, GROUND, W, 12);
-  ctx.fillStyle = themeColors.groundDark;
-  ctx.fillRect(0, GROUND + 12, W, 3);
-  ctx.globalAlpha = 0.35;
-  for (let x = -(g.scroll % 24) - 8; x < W; x += 24) {
-    ctx.beginPath();
-    ctx.moveTo(x + 8, GROUND);
-    ctx.lineTo(x + 18, GROUND);
-    ctx.lineTo(x + 10, GROUND + 12);
-    ctx.lineTo(x, GROUND + 12);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
 
-  // 6. Vẽ chú chim (xoay nghiêng theo vận tốc rơi vy)
+  // Thảm cỏ theo mùa (Đông: tuyết trắng phau, Thu: cỏ cháy, Xuân/Hạ: xanh tươi)
+  ctx.fillStyle = colorGrass;
+  ctx.fillRect(0, GROUND, W, 14);
+  ctx.fillStyle = colorGrassDark;
+  ctx.fillRect(0, GROUND + 14, W, 3);
+
+  // Hoa văn vạch đất cuộn ngang
+  ctx.fillStyle = colorStripe;
+  const groundOffset = (g.scroll * 1.0) % 20;
+  for (let gx = -groundOffset; gx < W + 20; gx += 20) {
+    ctx.fillRect(gx, GROUND + 20, 10, 4);
+    ctx.fillRect(gx + 5, GROUND + 28, 10, 4);
+    ctx.fillRect(gx, GROUND + 36, 10, 4);
+  }
+
+  // Viền đen mặt đất
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, GROUND, W, 2);
+
+  // 9. Vẽ Chú chim 2D PIXEL ART
   ctx.save();
   ctx.translate(BIRD_X, g.y);
-  ctx.rotate(Math.max(-0.5, Math.min(1.4, g.vy / 500)));
-  ctx.strokeStyle = themeColors.outline;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
 
-  // Thân chim
-  ctx.fillStyle = birdColor;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, R + 3, R, 0, 0, 7);
-  ctx.fill();
-  ctx.stroke();
+  const angle = Math.max(-0.4, Math.min(1.3, g.vy / 450));
+  ctx.rotate(angle);
 
-  // Cánh chim (vỗ cánh theo thời gian)
-  ctx.fillStyle = wingColor;
-  ctx.beginPath();
-  ctx.ellipse(-5, 2 + (g.phase === 'dead' ? 0 : Math.sin(g.t * 22) * 3), 8, 5, 0, 0, 7);
-  ctx.fill();
-  ctx.stroke();
+  const birdColor = activeSkin?.bird || themeColors.bird;
+  const wingColor = activeSkin?.wing || '#ffffff';
+  const beakColor = activeSkin?.beak || '#f85820';
 
-  // Mỏ chim
-  ctx.fillStyle = beakColor;
-  ctx.beginPath();
-  ctx.moveTo(12, -2);
-  ctx.lineTo(23, 2);
-  ctx.lineTo(12, 6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  const px = 2.2;
+  const offsetX = -(17 * px) / 2;
+  const offsetY = -(12 * px) / 2;
 
-  // Mắt chim
-  ctx.fillStyle = themeColors.eye;
-  circle(7, -5, 5);
-  ctx.stroke();
-  ctx.fillStyle = themeColors.outline;
-  circle(8.5, -5, 2);
+  const wingFrame = g.phase === 'dead' ? 0 : Math.floor((g.t * 12) % 3);
+
+  for (let r = 0; r < BIRD_PIXEL_MAP.length; r++) {
+    for (let c = 0; c < BIRD_PIXEL_MAP[r].length; c++) {
+      const type = BIRD_PIXEL_MAP[r][c];
+      if (!type) continue;
+
+      let cellColor = '#000000';
+      if (type === 1) cellColor = '#000000';
+      else if (type === 2) cellColor = birdColor;
+      else if (type === 3) cellColor = '#fce490';
+      else if (type === 4) cellColor = beakColor;
+      else if (type === 5) cellColor = '#ffffff';
+      else if (type === 6) {
+        cellColor = wingColor;
+        let wingShift = wingFrame === 2 ? -1 : wingFrame === 0 ? 1 : 0;
+        ctx.fillStyle = cellColor;
+        ctx.fillRect(offsetX + c * px, offsetY + (r + wingShift) * px, px, px);
+        continue;
+      }
+
+      ctx.fillStyle = cellColor;
+      ctx.fillRect(offsetX + c * px, offsetY + r * px, px, px);
+    }
+  }
 
   ctx.restore();
 }

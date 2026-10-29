@@ -1,18 +1,32 @@
 // D:\STUDY\TAILIEUHOC_\TTTN\flappy-bird\src\components\Hud.jsx
-// Lớp hiển thị điểm số, Get Ready và bảng Game Over đè trên Canvas
+// Lớp hiển thị điểm số, Get Ready và bảng Game Over phong cách 2D Pixel
 
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function Hud({ phase, score, best, newBest }) {
+export default function Hud({ phase, score, best, newBest, offline, countdown }) {
   const { user } = useAuth();
+
+  if (offline || countdown !== null) {
+    return (
+      <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/75 p-4 text-center" role="status" aria-live="polite">
+        <div className="pixel-box bg-amber-200 p-5 text-black">
+          <h2 className="text-lg font-black text-rose-700">{offline ? 'MẤT KẾT NỐI MẠNG' : 'ĐÃ KẾT NỐI LẠI'}</h2>
+          <p className="mt-3 text-xs font-bold">{offline ? 'Ván chơi đã tạm dừng. Đang chờ kết nối...' : 'Tiếp tục sau:'}</p>
+          {!offline && <p className="mt-2 text-5xl font-black text-emerald-700">{countdown}</p>}
+        </div>
+      </div>
+    );
+  }
 
   // 1. Khi đang chơi: Hiển thị điểm số to ở giữa phía trên
   if (phase === 'play') {
     return (
       <div className="pointer-events-none absolute inset-0 flex justify-center pt-8">
         <span
-          className="text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]"
-          style={{ WebkitTextStroke: '2px #0f172a' }}
+          className="text-4xl font-black text-white"
+          style={{
+            textShadow: '3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000',
+          }}
         >
           {score}
         </span>
@@ -25,17 +39,19 @@ export default function Hud({ phase, score, best, newBest }) {
     return (
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-4">
         <h2
-          className="text-3xl font-black text-amber-400 drop-shadow-[0_3px_3px_rgba(0,0,0,0.9)]"
-          style={{ WebkitTextStroke: '1.5px #0f172a' }}
+          className="text-2xl font-black text-amber-300"
+          style={{
+            textShadow: '3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000',
+          }}
         >
-          SẴN SÀNG!
+          GET READY!
         </h2>
-        <p className="mt-2 text-sm font-bold text-white bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700 shadow animate-pulse">
-          Chạm hoặc bấm Phím Cách để bay
+        <p className="mt-3 text-[9px] font-black text-black bg-white px-2.5 py-1.5 pixel-box animate-bounce">
+          CLICK / SPACE ĐỂ BAY
         </p>
 
-        <div className="mt-4 rounded-xl bg-slate-900/70 border border-slate-800 px-3 py-1.5 text-xs text-slate-300">
-          Kỷ lục: <span className="font-black text-amber-400">{user?.bestScore || best}</span> điểm
+        <div className="mt-4 bg-amber-200 pixel-box px-2.5 py-1 text-[9px] text-black font-black">
+          KỶ LỤC: <span className="text-rose-600">{user?.bestScore || best}</span>
         </div>
       </div>
     );
@@ -43,43 +59,45 @@ export default function Hud({ phase, score, best, newBest }) {
 
   // 3. Màn hình Kết Thúc Ván Bay (Game Over)
   return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
-      <div className="w-full max-w-[280px] rounded-2xl border-2 border-slate-800 bg-slate-900/95 p-5 shadow-2xl text-center">
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-[280px] bg-amber-300 pixel-box p-4 text-center">
         <h2
-          className="text-2xl font-black text-rose-500 drop-shadow"
-          style={{ WebkitTextStroke: '1px #0f172a' }}
+          className="text-xl font-black text-rose-600 mb-3"
+          style={{
+            textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
+          }}
         >
           GAME OVER
         </h2>
 
-        {/* Khung điểm số */}
-        <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-800/80 p-3 border border-slate-700/60">
-          <div>
-            <p className="text-[11px] font-bold text-slate-400">ĐIỂM SỐ</p>
-            <p className="text-2xl font-black text-white">{score}</p>
+        {/* Khung điểm số dạng Pixel Scoreboard */}
+        <div className="bg-amber-100 border-2 border-black p-3 mb-3 text-left">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[9px] font-black text-slate-700">ĐIỂM:</span>
+            <span className="text-base font-black text-black">{score}</span>
           </div>
-          <div>
-            <p className="text-[11px] font-bold text-slate-400">
-              {newBest ? 'KỶ LỤC MỚI 🎉' : 'KỶ LỤC'}
-            </p>
-            <p className="text-2xl font-black text-amber-400">{best}</p>
+
+          <div className="flex justify-between items-center pt-1.5 border-t border-dashed border-slate-400">
+            <span className="text-[9px] font-black text-slate-700">KỶ LỤC:</span>
+            <span className="text-base font-black text-rose-600">
+              {Math.max(user?.bestScore || 0, best, score)}
+            </span>
           </div>
+
+          {newBest && (
+            <div className="mt-2 text-center text-[8px] font-black text-emerald-700 animate-pulse bg-emerald-200 border border-emerald-500 py-0.5">
+              ★ KỶ LỤC MỚI! ★
+            </div>
+          )}
         </div>
 
-        {/* Phần thưởng xu hoặc nhắc đăng nhập */}
-        {user ? (
-          <p className="mt-2 text-xs font-semibold text-emerald-400">
-            🪙 +{score} xu thưởng đã thêm vào ví!
-          </p>
-        ) : (
-          <p className="mt-2 text-[11px] text-amber-300/90 bg-amber-500/10 rounded-lg p-1.5 border border-amber-500/20">
-            💡 Đăng nhập để lưu điểm vào Bảng Xếp Hạng!
-          </p>
-        )}
+        {/* Thưởng xu */}
+        <p className="text-[8px] font-black text-amber-900 mb-3 bg-yellow-200 border border-yellow-400 py-1">
+          🪙 +{score} XU THƯỞNG
+        </p>
 
-        {/* Hướng dẫn chơi lại */}
-        <p className="mt-4 text-xs font-bold text-slate-400">
-          Chạm hoặc bấm Phím Cách để chơi lại
+        <p className="text-[8px] text-black font-black animate-pulse">
+          BẤM ĐỂ CHƠI LẠI
         </p>
       </div>
     </div>

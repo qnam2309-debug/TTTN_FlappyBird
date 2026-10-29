@@ -23,6 +23,7 @@ const newPipe = (x) => ({
 // Reset trạng thái ván chơi
 export const reset = (g) =>
   Object.assign(g, {
+    paused: false,
     phase: 'ready',   // 'ready' | 'play' | 'dead'
     y: H * 0.42,
     vy: 0,
@@ -43,6 +44,7 @@ export function hits(cx, cy, r, x, y, w, h) {
 
 // Xử lý khi nhấn nút bay (Flap)
 export function flap(g) {
+  if (g.paused) return;
   if (g.phase === 'dead') {
     if (performance.now() - g.deadAt > RESTART_LOCK) reset(g);
     return;
@@ -74,6 +76,7 @@ function die(g, reason = 'hit') {
 
 // Cập nhật vị trí, tốc độ và kiểm tra va chạm sau mỗi bước thời gian dt
 export function step(g, dt, calm = false) {
+  if (g.paused) return;
   g.t += dt;
   if (g.phase === 'ready') {
     if (!calm) {

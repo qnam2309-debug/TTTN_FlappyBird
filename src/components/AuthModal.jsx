@@ -85,7 +85,7 @@ export default function AuthModal({ isOpen, onClose }) {
   if (success) {
     const isRegister = success.mode === 'register';
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 font-sans backdrop-blur-xs">
         <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl text-center">
           <div className="text-5xl">🎉</div>
           <h2 className="mt-3 text-xl font-bold text-emerald-400">
@@ -175,7 +175,7 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 font-sans backdrop-blur-xs">
       <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         {/* Nút đóng */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">

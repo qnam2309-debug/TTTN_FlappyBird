@@ -59,7 +59,9 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
 
   return (
     <header
-      className="relative z-50 flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-900/90 px-3 py-2 shadow-lg backdrop-blur-xs"
+      className={`relative z-50 flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-900/90 px-3 py-2 font-sans shadow-lg backdrop-blur-xs ${
+        width ? '' : 'max-w-md'
+      }`}
       style={width ? { width: `${width}px`, maxWidth: '100vw' } : undefined}
     >
       {/* Trái: logo + tiêu đề (kiểu cũ) */}
@@ -108,7 +110,7 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
             </button>
 
             {menuOpen && (
-              <div className="absolute left-full top-0 z-50 pl-2">
+              <div className="absolute right-0 top-full z-50 mt-2 sm:left-full sm:right-auto sm:top-0 sm:mt-0 sm:pl-2">
                 <div className="w-56 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
                   {/* Thông tin người dùng */}
                   <div className="flex items-center gap-3 border-b border-slate-800 p-4">
@@ -123,7 +125,13 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
 
                   {/* Các mục menu */}
                   <div className="p-2">
-                    <MenuItem icon="🪪" label="Thông tin tài khoản" onClick={() => pick(onOpenAccount)} />
+                    {typeof onOpenAccount === 'function' && (
+                      <MenuItem
+                        icon="🪪"
+                        label="Thông tin tài khoản"
+                        onClick={() => pick(onOpenAccount)}
+                      />
+                    )}
                     <MenuItem
                       icon="🏆"
                       label="Bảng xếp hạng"
