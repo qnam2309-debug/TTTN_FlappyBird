@@ -44,14 +44,16 @@ export default function LeaderboardModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
       <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
         {/* Tiêu đề & Nút đóng */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🏆</span>
-            <h2 className="text-xl font-bold text-amber-400">Bảng Xếp Hạng</h2>
+        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 text-2xl">🏆</span>
+            <h2 className="break-words text-sm font-bold leading-tight text-amber-400 sm:text-base">
+              Bảng Xếp Hạng
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
           >
             ✕
           </button>
@@ -77,15 +79,15 @@ export default function LeaderboardModal({ isOpen, onClose }) {
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 transition ${
+                  className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition sm:px-4 ${
                     isCurrentUser
                       ? 'border border-amber-400/50 bg-amber-500/15'
                       : 'border border-slate-800 bg-slate-800/40 hover:bg-slate-800/70'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg font-black text-sm ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-black text-sm ${
                         item.rank === 1
                           ? 'bg-amber-400 text-slate-950 shadow-md'
                           : item.rank === 2
@@ -97,18 +99,18 @@ export default function LeaderboardModal({ isOpen, onClose }) {
                     >
                       {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
                     </span>
-                    <div>
-                      <p className="font-bold text-white text-sm">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-bold leading-tight text-white">
                         {item.username}{' '}
                         {isCurrentUser && (
-                          <span className="text-xs text-amber-400 font-normal">(Bạn)</span>
+                          <span className="text-xs font-normal text-amber-400">(Bạn)</span>
                         )}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-black text-amber-400">{item.bestScore}</span>
-                    <span className="ml-1 text-xs text-slate-400">điểm</span>
+                  <div className="shrink-0 whitespace-nowrap text-right">
+                    <span className="text-base font-black text-amber-400 sm:text-lg">{item.bestScore}</span>
+                    <span className="ml-1 text-[10px] text-slate-400 sm:text-xs">điểm</span>
                   </div>
                 </div>
               );

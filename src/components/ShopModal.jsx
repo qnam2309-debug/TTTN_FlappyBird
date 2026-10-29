@@ -47,14 +47,16 @@ export default function ShopModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
       <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
         {/* Tiêu đề & Nút đóng */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🛍️</span>
-            <h2 className="text-xl font-bold text-amber-400">Cửa Hàng Trang Phục</h2>
+        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 text-2xl">🛍️</span>
+            <h2 className="break-words text-sm font-bold leading-tight text-amber-400 sm:text-base">
+              Cửa Hàng Trang Phục
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
           >
             ✕
           </button>
@@ -99,14 +101,14 @@ export default function ShopModal({ isOpen, onClose }) {
             return (
               <div
                 key={skin.id}
-                className={`flex items-center justify-between rounded-xl p-3.5 border transition ${
+                className={`flex flex-col gap-3 rounded-xl p-3.5 border transition sm:flex-row sm:items-center sm:justify-between ${
                   isActive
                     ? 'border-amber-400 bg-amber-500/10 shadow-md'
                     : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800/70'
                 }`}
               >
                 {/* Xem trước hình dạng và màu sắc của chim */}
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <div
                     className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 shadow"
                     style={{ backgroundColor: skin.colors.bird }}
@@ -131,21 +133,23 @@ export default function ShopModal({ isOpen, onClose }) {
                     />
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-white text-sm">{skin.name}</h3>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="break-words text-sm font-bold text-white">{skin.name}</h3>
                       {isActive && (
                         <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-slate-950">
                           ĐANG DÙNG
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">{skin.description}</p>
+                    <p className="mt-0.5 break-words text-xs leading-relaxed text-slate-400">
+                      {skin.description}
+                    </p>
                   </div>
                 </div>
 
                 {/* Nút hành động */}
-                <div className="shrink-0 pl-2">
+                <div className="shrink-0 self-end sm:self-auto sm:pl-2">
                   {isActive ? (
                     <button
                       disabled

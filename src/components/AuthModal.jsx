@@ -85,23 +85,23 @@ export default function AuthModal({ isOpen, onClose }) {
   if (success) {
     const isRegister = success.mode === 'register';
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 font-sans backdrop-blur-xs">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl text-center">
-          <div className="text-5xl">🎉</div>
-          <h2 className="mt-3 text-xl font-bold text-emerald-400">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="w-full max-w-sm bg-amber-200 pixel-box p-5 text-center sm:p-6">
+          <div className="text-4xl">🎉</div>
+          <h2 className="mt-3 break-words text-sm font-black leading-tight text-black sm:text-base">
             {isRegister ? 'Đăng Ký Thành Công!' : 'Đăng Nhập Thành Công!'}
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Chào mừng <b className="text-amber-400">{success.name}</b>!
+          <p className="mt-3 break-words text-[10px] font-black text-slate-800">
+            Chào mừng <span className="text-rose-700">{success.name}</span>!
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-[9px] leading-relaxed text-slate-700">
             {isRegister
               ? 'Bạn được tặng 50 xu và skin mặc định.'
               : 'Chúc bạn chơi game vui vẻ!'}
           </p>
           <button
             onClick={handleStartGame}
-            className="mt-5 w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 shadow-lg transition hover:bg-amber-400 active:scale-98 cursor-pointer"
+            className="mt-4 w-full bg-emerald-400 hover:bg-emerald-300 pixel-btn py-2.5 text-[10px] font-black text-black cursor-pointer"
           >
             🎮 Bắt Đầu Chơi
           </button>
