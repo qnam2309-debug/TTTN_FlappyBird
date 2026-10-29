@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { draw, readColors } from './draw.js';
-import { DT, flap, newGame, reset, step } from './game.js';
+import { flap, newGame, reset, step } from './game.js';
 import { saveRun, restoreRun, clearRun } from './resume.js';
 
 const BEST_KEY = 'flappy-best';
@@ -102,39 +102,23 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
 
     let raf;
     let prev = performance.now();
-    let acc = 0;
-    // Trạng thái trước bước vật lý gần nhất (giữ qua các frame để nội suy)
-    let prevY = g.y;
-    let prevVy = g.vy;
     let shown = g.phase + g.score;
     let lastPhase = g.phase;
 
     // Vòng lặp animation frame
     const frame = (now) => {
-      acc += Math.min((now - prev) / 1000, 0.1);
+      const dt = Math.min((now - prev) / 1000, 0.05);
       prev = now;
 
-      while (acc >= DT) {
-        prevY = g.y;
-        prevVy = g.vy;
-        step(g, DT, calm);
-        acc -= DT;
-      }
-
-      // Nội suy vị trí & vận tốc giữa 2 bước vật lý -> chuyển động mượt
-      const alpha = Math.min(acc / DT, 1);
-      const renderG = {
-        ...g,
-        y: prevY + (g.y - prevY) * alpha,
-        vy: prevVy + (g.vy - prevVy) * alpha,
-      };
+      // Cập nhật bước vật lý mượt mà đồng bộ theo thời gian thực (không lệch nhịp 60Hz/120Hz)
+      step(g, dt, calm);
 
       if (now - lastSaved >= 1000) {
         lastSaved = now;
         if (g.phase === 'play') saveRun(g);
       }
-      // Vẽ Canvas với theme màu và skin đang chọn
-      draw(ctx, renderG, colors, activeSkinRef.current);
+      // Vẽ Canvas với theme màu và skin đang chọn (truyền trực tiếp g, loại bỏ rác bộ nhớ GC)
+      draw(ctx, g, colors, activeSkinRef.current);
 
       // Kích hoạt khi chim chết (chuyển sang 'dead')
       if (lastPhase !== 'dead' && g.phase === 'dead') {

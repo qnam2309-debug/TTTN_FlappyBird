@@ -55,7 +55,7 @@ function GameScreen() {
     return () => observer.disconnect();
   }, []);
 
-  const pixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+  const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
   const playfieldWidth = Math.round(W * scale);
   const playfieldHeight = Math.round(H * scale);
 
