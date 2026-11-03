@@ -15,6 +15,9 @@ dist-ssr
 .env.*.local
 !.env.example
 
+# Local database backups (chứa dữ liệu thật, không commit)
+backend/sql/backups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
