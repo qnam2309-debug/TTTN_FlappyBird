@@ -181,11 +181,13 @@ Database: `TTTN_FlappyBird` — 4 bảng:
 | Bảng | Khóa chính | Khóa ngoại | Mô tả |
 |---|---|---|---|
 | `SKINS` | `SkinID` | — | Danh mục trang phục |
-| `USERS` | `UserID` | `CurrentSkinID` → `SKINS.SkinID` | Tài khoản người chơi |
+| `USERS` | `UserID` | `CurrentSkinID` → `SKINS.SkinID` | Tài khoản người chơi (gộp cả đăng ký đang chờ OTP) |
 | `USER_SKINS` | (`UserID`, `SkinID`) | → `USERS`, → `SKINS` | Trang phục đã sở hữu (n-n) |
 | `GAME_RESULTS` | `ResultID` | `UserID` → `USERS.UserID` | Kết quả từng lượt chơi |
 
 Chi tiết cột xem trong file [`sql/schema.sql`](sql/schema.sql).
+
+> Bảng `USERS` đã gộp `PENDING_REGISTRATIONS`: `IsVerified = 0` là đăng ký đang chờ OTP, `IsVerified = 1` là tài khoản đã xác thực. Các cột `OTPHash`, `OTPAttempts`, `OTPExpiresAt`, `OTPLastSentAt` chỉ có giá trị khi đang chờ xác thực.
 
 ---
 

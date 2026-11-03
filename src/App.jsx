@@ -98,7 +98,7 @@ function GameScreen() {
 
       {/* 3. Dòng nhắc nhở bên dưới */}
       <footer className="text-center pb-1">
-        <p className="text-xs text-slate-500 font-medium">
+        <p className="text-[15px] text-slate-500 font-medium">
           Chạm vào màn hình hoặc bấm <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">Space</kbd> / <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">↑</kbd> để đập cánh
         </p>
       </footer>

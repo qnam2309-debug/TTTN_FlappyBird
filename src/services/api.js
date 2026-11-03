@@ -60,6 +60,7 @@ export async function apiRequest(endpoint, options = {}) {
   if (!response.ok) {
     const error = new Error(data?.message || `Yêu cầu API thất bại (${response.status}).`);
     error.status = response.status;
+    if (data?.retryAfter !== undefined) error.retryAfter = data.retryAfter;
     throw error;
   }
   return data;
@@ -77,7 +78,32 @@ async function authenticate(endpoint, username, password) {
 }
 
 export const authApi = {
-  register: (username, password) => authenticate('/auth/register', username, password),
+  // Đăng ký: backend gửi OTP, chưa đăng nhập ngay
+  register: async (username, password) => {
+    return apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+      authenticated: false,
+    });
+  },
+  // Xác thực OTP: tạo tài khoản + trả token/user
+  verifyOtp: async (email, otp) => {
+    const data = await apiRequest('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+      authenticated: false,
+    });
+    const user = normalizeUser(data?.user);
+    saveSession(data?.token, user);
+    return { ...data, token: data.token, user };
+  },
+  resendOtp: async (email) => {
+    return apiRequest('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      authenticated: false,
+    });
+  },
   login: (username, password) => authenticate('/auth/login', username, password),
   googleLogin: async (credential) => {
     const data = await apiRequest('/auth/google', {

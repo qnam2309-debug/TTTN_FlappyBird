@@ -8,6 +8,8 @@ const auth = require('../middleware/auth');
 
 // Các route công khai (không cần đăng nhập)
 router.post('/register', authController.register);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/resend-otp', authController.resendOtp);
 router.post('/login', authController.login);
 router.post('/google', authController.googleLogin);
 router.post('/logout', authController.logout);

@@ -6,8 +6,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 function Row({ label, value }) {
   return (
     <div className="flex items-start justify-between gap-3 border-2 border-black bg-amber-100 px-2 py-1.5">
-      <span className="shrink-0 text-[9px] font-black text-slate-700">{label}</span>
-      <span className="break-all text-right text-[9px] font-black text-black">{value}</span>
+      <span className="shrink-0 text-[12px] font-black text-slate-700">{label}</span>
+      <span className="break-all text-right text-[12px] font-black text-black">{value}</span>
     </div>
   );
 }
@@ -26,11 +26,11 @@ export default function AccountModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-md bg-amber-200 pixel-box p-4 sm:p-6">
         <div className="flex items-center justify-between border-b-4 border-black pb-3">
-          <h2 className="text-sm font-black text-black sm:text-base">Thông tin tài khoản</h2>
+          <h2 className="text-lg font-black text-black sm:text-xl">Thông tin tài khoản</h2>
           <button
             onClick={onClose}
             aria-label="Đóng"
-            className="bg-rose-400 hover:bg-rose-300 pixel-btn px-2 py-1 text-[10px] font-black text-black cursor-pointer"
+            className="bg-rose-400 hover:bg-rose-300 pixel-btn px-2 py-1 text-sm font-black text-black cursor-pointer"
           >
             ✕
           </button>

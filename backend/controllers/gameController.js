@@ -160,6 +160,7 @@ exports.getLeaderboard = async (req, res, next) => {
         GAME_RESULTS.Score AS bestScore
        FROM GAME_RESULTS
        INNER JOIN USERS ON GAME_RESULTS.UserID = USERS.UserID
+       WHERE USERS.IsVerified = 1
        ORDER BY GAME_RESULTS.Score DESC, GAME_RESULTS.PlayedAt ASC
        LIMIT ?`,
       [limit]

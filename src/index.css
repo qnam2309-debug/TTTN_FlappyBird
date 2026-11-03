@@ -10,7 +10,8 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  font-family: 'Press Start 2P', monospace, cursive;
+  /* Handjet hỗ trợ tiếng Việt; Press Start 2P chỉ dùng cho logo ASCII */
+  font-family: 'Handjet', 'Press Start 2P', ui-monospace, monospace;
 }
 
 body {
@@ -39,10 +40,54 @@ body {
   box-shadow: 1px 1px 0px #000;
 }
 
-/* Font pixel 8-bit (fallback monospace nếu không tải được font) */
+/* Font pixel 8-bit có hỗ trợ tiếng Việt */
 .font-pixel {
+  font-family: 'Handjet', ui-monospace, 'Courier New', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Font arcade gốc (chỉ dùng cho chữ ASCII như logo) */
+.font-arcade {
   font-family: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
   letter-spacing: 0.02em;
+}
+
+/* Header co giãn theo chiều rộng thực tế (không phụ thuộc zoom) */
+.game-header {
+  container-type: inline-size;
+}
+
+@container (max-width: 260px) {
+  .header-menu {
+    position: fixed;
+    left: auto;
+    right: 0.75rem;
+    top: 4.5rem;
+    margin-top: 0;
+    padding-left: 0;
+  }
+
+  .header-menu > .pixel-box {
+    width: 12.5rem;
+  }
+}
+
+@container (max-width: 380px) {
+  .header-volume .pixel-range {
+    width: 3.5rem;
+  }
+}
+
+@container (max-width: 300px) {
+  .header-volume {
+    display: none;
+  }
+}
+
+@container (max-width: 240px) {
+  .header-title-text {
+    display: none;
+  }
 }
 
 /* Hiệu ứng chữ chạy ngang (marquee) */
