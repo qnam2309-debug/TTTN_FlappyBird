@@ -47,7 +47,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
         <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="shrink-0 text-2xl">🏆</span>
-            <h2 className="break-words text-sm font-bold leading-tight text-amber-400 sm:text-base">
+            <h2 className="break-words text-base font-bold leading-tight text-amber-400 sm:text-lg">
               Bảng Xếp Hạng
             </h2>
           </div>
@@ -62,15 +62,15 @@ export default function LeaderboardModal({ isOpen, onClose }) {
         {/* Nội dung danh sách */}
         <div className="mt-4 flex-1 overflow-y-auto space-y-2 pr-1">
           {loading ? (
-            <div className="py-12 text-center text-slate-400 text-sm">
+            <div className="py-12 text-center text-slate-400 text-base">
               Đang tải bảng xếp hạng...
             </div>
           ) : loadError ? (
-            <div className="py-12 text-center text-rose-400 text-sm">
+            <div className="py-12 text-center text-rose-400 text-base">
               {loadError}
             </div>
           ) : leaderboard.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-sm">
+            <div className="py-12 text-center text-slate-400 text-base">
               Chưa có dữ liệu bảng xếp hạng.
             </div>
           ) : (
@@ -87,7 +87,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-black text-sm ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-black text-base ${
                         item.rank === 1
                           ? 'bg-amber-400 text-slate-950 shadow-md'
                           : item.rank === 2
@@ -100,17 +100,17 @@ export default function LeaderboardModal({ isOpen, onClose }) {
                       {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
                     </span>
                     <div className="min-w-0">
-                      <p className="break-words text-sm font-bold leading-tight text-white">
+                      <p className="break-words text-base font-bold leading-tight text-white">
                         {item.username}{' '}
                         {isCurrentUser && (
-                          <span className="text-xs font-normal text-amber-400">(Bạn)</span>
+                          <span className="text-sm font-normal text-amber-400">(Bạn)</span>
                         )}
                       </p>
                     </div>
                   </div>
                   <div className="shrink-0 whitespace-nowrap text-right">
-                    <span className="text-base font-black text-amber-400 sm:text-lg">{item.bestScore}</span>
-                    <span className="ml-1 text-[10px] text-slate-400 sm:text-xs">điểm</span>
+                    <span className="text-lg font-black text-amber-400 sm:text-xl">{item.bestScore}</span>
+                    <span className="ml-1 text-[12px] text-slate-400 sm:text-base">điểm</span>
                   </div>
                 </div>
               );
@@ -121,7 +121,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
         {/* Thông báo nếu là Guest */}
         {isGuest && (
           <div className="mt-4 rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-center">
-            <p className="text-xs text-amber-300">
+            <p className="text-sm text-amber-300">
               💡 Bạn đang chơi ở chế độ <b>Khách</b>. Hãy đăng nhập để lưu điểm kỷ lục và tranh hạng cùng các cao thủ!
             </p>
           </div>

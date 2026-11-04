@@ -49,12 +49,21 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
-  // Đăng ký qua Backend thật
+  // Đăng ký: backend gửi OTP, chưa đăng nhập ngay
   const register = async (username, password) => {
     const res = await authApi.register(username, password);
+    return res;
+  };
+
+  // Xác thực OTP đăng ký -> đăng nhập
+  const verifyOtp = async (email, otp) => {
+    const res = await authApi.verifyOtp(email, otp);
     setUser(res.user);
     return res.user;
   };
+
+  // Gửi lại mã OTP
+  const resendOtp = async (email) => authApi.resendOtp(email);
 
   // Đăng nhập/đăng ký bằng Google (credential là ID token do Google trả về)
   const loginWithGoogle = async (credential) => {
@@ -133,6 +142,8 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
+    verifyOtp,
+    resendOtp,
     loginWithGoogle,
     logout,
     submitScore,

@@ -3,7 +3,7 @@
 // Hỗ trợ đổi 4 mùa Xuân - Hạ - Thu - Đông mượt mà (chuyển màu mềm mại)
 // Tạm thời hạ mốc đổi mùa xuống 3 điểm/mùa để test
 
-import { BIRD_X, GAP, GROUND, H, PIPE_W, W } from './game.js';
+import { BIRD_X, GAP, GROUND, H, PIPE_W, SPIKE_H, W } from './game.js';
 
 export const POINTS_PER_SEASON = 10; // 10 điểm/mùa (Xuân: 0-9, Hạ: 10-19, Thu: 20-29, Đông: 30-39 -> lặp lại)
 
@@ -242,8 +242,71 @@ export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
     ctx.fillRect(bx + 4, GROUND - 75, 16, 10);
   }
 
+  // Hàm vẽ hàng gai nhọn phong cách Pixel Art sắc bén
+  const drawPixelSpikes = (rimX, baseY, rimW, spikeH, pointingDown) => {
+    const numSpikes = 4;
+    const spikeW = rimW / numSpikes; // 16px mỗi gai
+
+    for (let i = 0; i < numSpikes; i++) {
+      const sx = rimX + i * spikeW;
+      const cx = sx + spikeW / 2;
+      const tipY = pointingDown ? baseY + spikeH : baseY - spikeH;
+
+      ctx.save();
+
+      // 1. Thân gai kim loại xám thép
+      ctx.beginPath();
+      ctx.moveTo(sx, baseY);
+      ctx.lineTo(cx, tipY);
+      ctx.lineTo(sx + spikeW, baseY);
+      ctx.closePath();
+      ctx.fillStyle = '#64748b';
+      ctx.fill();
+
+      // 2. Viền phản quang ánh kim sáng bên trái
+      ctx.beginPath();
+      ctx.moveTo(sx + 1, baseY);
+      ctx.lineTo(cx, tipY);
+      ctx.lineTo(cx, baseY);
+      ctx.closePath();
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fill();
+
+      // 3. Đổ bóng tối bên phải tạo chiều sâu 3D sắc bén
+      ctx.beginPath();
+      ctx.moveTo(cx, baseY);
+      ctx.lineTo(cx, tipY);
+      ctx.lineTo(sx + spikeW - 1, baseY);
+      ctx.closePath();
+      ctx.fillStyle = '#334155';
+      ctx.fill();
+
+      // 4. Mũi chóp đỏ cảnh báo nguy hiểm sắc nhọn
+      const redH = Math.min(5, spikeH * 0.3);
+      const redBaseY = pointingDown ? tipY - redH : tipY + redH;
+      ctx.beginPath();
+      ctx.moveTo(cx - 2, redBaseY);
+      ctx.lineTo(cx, tipY);
+      ctx.lineTo(cx + 2, redBaseY);
+      ctx.closePath();
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+
+      // 5. Viền nét đen Pixel Retro
+      ctx.beginPath();
+      ctx.moveTo(sx, baseY);
+      ctx.lineTo(cx, tipY);
+      ctx.lineTo(sx + spikeW, baseY);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  };
+
   // 6. Vẽ Cột Ống nước (Pipes) dạng 2D Pixel
-  const drawPixelPipe = (x, y, len, isTop) => {
+  const drawPixelPipe = (x, y, len, isTop, isMoving = false) => {
     if (len <= 0) return;
     const rimH = 26;
     const bodyLen = Math.max(0, len - rimH);
@@ -281,6 +344,18 @@ export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
     ctx.fillRect(rimX, rimY, 2, rimH);
     ctx.fillRect(rimX + rimW - 2, rimY, 2, rimH);
 
+    // CỘT DI CHUYỂN: Vạch cảnh báo sọc xiên nguy hiểm (Hazard stripes vàng - đen)
+    if (isMoving) {
+      const hazardY = rimY + Math.floor(rimH / 2) - 3;
+      const hazardH = 6;
+      ctx.fillStyle = '#fbbf24'; // Vàng cảnh báo
+      ctx.fillRect(rimX + 3, hazardY, rimW - 6, hazardH);
+      ctx.fillStyle = '#0f172a'; // Sọc đen xiên
+      for (let hx = rimX + 5; hx < rimX + rimW - 6; hx += 8) {
+        ctx.fillRect(hx, hazardY, 4, hazardH);
+      }
+    }
+
     // MÙA ĐÔNG: Băng tuyết đóng trên vành ống nước
     if (sTo.type === 'winter') {
       ctx.fillStyle = '#ffffff';
@@ -293,8 +368,15 @@ export function draw(ctx, g, themeColors = DEFAULT_COLORS, activeSkin = null) {
   };
 
   for (const p of g.pipes) {
-    drawPixelPipe(p.x, 0, p.top, true);
-    drawPixelPipe(p.x, p.top + GAP, GROUND - p.top - GAP, false);
+    drawPixelPipe(p.x, 0, p.top, true, p.isMoving);
+    drawPixelPipe(p.x, p.top + GAP, GROUND - p.top - GAP, false, p.isMoving);
+
+    // Vẽ gai nhọn thu hẹp không gian vượt chướng ngại vật
+    if (p.spike === 'top') {
+      drawPixelSpikes(p.x - 3, p.top, PIPE_W + 6, SPIKE_H, true);
+    } else if (p.spike === 'bottom') {
+      drawPixelSpikes(p.x - 3, p.top + GAP, PIPE_W + 6, SPIKE_H, false);
+    }
   }
 
   // 7. HIỆU ỨNG THIÊN NHIÊN CHI TIẾT THEO TỪNG MÙA:

@@ -92,7 +92,7 @@ module.exports = {
             format: 'password',
             example: 'Abc12345',
             description:
-              'Đúng 8 ký tự, có ít nhất 1 chữ cái và 1 chữ số, không khoảng trắng.',
+              'Tối thiểu 8 ký tự, có ít nhất 1 chữ cái và 1 chữ số, không khoảng trắng.',
           },
         },
       },
@@ -102,6 +102,31 @@ module.exports = {
           success: { type: 'boolean', example: true },
           token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
           user: { $ref: '#/components/schemas/User' },
+        },
+      },
+      OtpRegisterResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          requiresVerification: { type: 'boolean', example: true },
+          email: { type: 'string', example: 'player1@example.com' },
+          message: { type: 'string', example: 'Mã OTP đã được gửi tới email của bạn.' },
+          expiresIn: { type: 'integer', example: 300 },
+        },
+      },
+      VerifyOtpRequest: {
+        type: 'object',
+        required: ['email', 'otp'],
+        properties: {
+          email: { type: 'string', example: 'player1@example.com' },
+          otp: { type: 'string', example: '123456', description: 'Mã OTP gồm 6 chữ số.' },
+        },
+      },
+      ResendOtpRequest: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', example: 'player1@example.com' },
         },
       },
       UserResponse: {
@@ -124,9 +149,9 @@ module.exports = {
     '/api/auth/register': {
       post: {
         tags: ['Auth'],
-        summary: 'Đăng ký tài khoản mới',
+        summary: 'Đăng ký tài khoản mới (gửi OTP)',
         description:
-          'Tạo tài khoản mới. Tặng 50 xu và trang bị skin mặc định. Trả về JWT + thông tin người dùng.',
+          'Kiểm tra email/mật khẩu, tạo mã OTP 6 số và gửi tới email. Tài khoản được lưu ở trạng thái chờ xác thực (IsVerified = 0) và chỉ dùng được sau khi nhập đúng OTP.',
         requestBody: {
           required: true,
           content: {
@@ -136,10 +161,10 @@ module.exports = {
           },
         },
         responses: {
-          201: {
-            description: 'Đăng ký thành công',
+          202: {
+            description: 'Đã gửi OTP, cần xác thực',
             content: {
-              'application/json': { schema: { $ref: '#/components/schemas/AuthResponse' } },
+              'application/json': { schema: { $ref: '#/components/schemas/OtpRegisterResponse' } },
             },
           },
           400: {
@@ -150,6 +175,97 @@ module.exports = {
           },
           409: {
             description: 'Tên đăng nhập đã tồn tại',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+          502: {
+            description: 'Không gửi được email OTP',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/verify-otp': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Xác thực OTP và kích hoạt tài khoản',
+        description: 'Kiểm tra mã OTP (6 số). Nếu đúng, đánh dấu tài khoản đã xác thực (IsVerified = 1), tặng 50 xu + skin mặc định và trả về JWT + thông tin người dùng.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/VerifyOtpRequest' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Xác thực thành công, tài khoản đã được tạo',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/AuthResponse' } },
+            },
+          },
+          400: {
+            description: 'OTP sai / hết hạn / dữ liệu không hợp lệ',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+          429: {
+            description: 'Nhập sai quá nhiều lần',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/resend-otp': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Gửi lại mã OTP',
+        description: 'Gửi lại mã OTP cho email đang chờ đăng ký (tối thiểu 60 giây giữa 2 lần gửi).',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ResendOtpRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Đã gửi lại OTP',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Đã gửi lại mã OTP tới email của bạn.' },
+                    expiresIn: { type: 'integer', example: 300 },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Không tìm thấy yêu cầu đăng ký',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+          429: {
+            description: 'Đang trong thời gian chờ gửi lại',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
+          },
+          502: {
+            description: 'Không gửi được email OTP',
             content: {
               'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
             },

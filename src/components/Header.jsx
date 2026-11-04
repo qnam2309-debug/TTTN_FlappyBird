@@ -29,11 +29,11 @@ function MenuItem({ icon, label, onClick, danger = false }) {
     <button
       onClick={onClick}
       role="menuitem"
-      className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[9px] font-black transition ${
+      className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-base font-black transition ${
         danger ? 'text-rose-700 hover:bg-rose-300' : 'text-black hover:bg-amber-300'
       }`}
     >
-      <span className="text-sm leading-none">{icon}</span>
+      <span className="text-base leading-none">{icon}</span>
       <span>{label}</span>
     </button>
   );
@@ -59,7 +59,7 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
 
   return (
     <header
-      className={`relative z-50 flex w-full items-center justify-between gap-2 bg-amber-400 pixel-box px-2.5 py-2 sm:px-3 ${
+      className={`game-header relative z-50 flex w-full items-center justify-between gap-2 bg-amber-400 pixel-box px-2.5 py-2 sm:px-3 ${
         width ? '' : 'max-w-md'
       }`}
       style={width ? { width: `${width}px`, maxWidth: '100vw' } : undefined}
@@ -67,14 +67,14 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
       {/* Trái: logo + tiêu đề */}
       <div className="flex shrink-0 items-center gap-1.5">
         <span className="text-lg leading-none">🐦</span>
-        <h1 className="text-[10px] font-black leading-none tracking-tighter text-black sm:text-xs">
+        <h1 className="header-title-text font-arcade text-[10px] font-black leading-none tracking-tighter text-black sm:text-xs">
           FLAPPY BIRD
         </h1>
       </div>
 
       {/* Giữa: thanh chỉnh âm lượng kiểu pixel */}
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
-        <span className="text-sm leading-none" aria-hidden="true">
+      <div className="header-volume flex min-w-0 flex-1 items-center justify-center gap-1.5">
+        <span className="text-base leading-none" aria-hidden="true">
           {volume === 0 ? '🔇' : '🔊'}
         </span>
         <input
@@ -110,14 +110,14 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-3 sm:left-full sm:right-auto sm:top-0 sm:mt-0 sm:pl-3">
+              <div className="header-menu absolute right-0 top-full z-50 mt-3 sm:left-full sm:right-auto sm:top-0 sm:mt-0 sm:pl-6">
                 <div className="w-64 overflow-hidden bg-amber-200 pixel-box">
                   {/* Thông tin người dùng */}
                   <div className="flex items-center gap-2.5 border-b-4 border-black p-3">
                     <Avatar name={displayName} size={40} />
                     <div className="min-w-0">
-                      <p className="truncate text-[10px] font-black text-black">{displayName}</p>
-                      <p className="truncate text-[8px] text-slate-700" title={email}>
+                      <p className="truncate text-sm font-black text-black">{displayName}</p>
+                      <p className="truncate text-[11px] text-slate-700" title={email}>
                         {email}
                       </p>
                     </div>
@@ -148,7 +148,7 @@ export default function Header({ width, onOpenAuth, onOpenLeaderboard, onOpenSho
         ) : (
           <button
             onClick={onOpenAuth}
-            className="bg-emerald-400 hover:bg-emerald-300 pixel-btn px-2.5 py-1 text-[9px] font-black text-black cursor-pointer"
+            className="bg-emerald-400 hover:bg-emerald-300 pixel-btn px-2.5 py-1 text-[15px] font-black text-black cursor-pointer"
           >
             👤 LOGIN
           </button>

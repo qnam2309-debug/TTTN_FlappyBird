@@ -45,12 +45,12 @@ export default function ShopModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
         {/* Tiêu đề & Nút đóng */}
         <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="shrink-0 text-2xl">🛍️</span>
-            <h2 className="break-words text-sm font-bold leading-tight text-amber-400 sm:text-base">
+            <h2 className="break-words text-base font-bold leading-tight text-amber-400 sm:text-lg">
               Cửa Hàng Trang Phục
             </h2>
           </div>
@@ -64,28 +64,28 @@ export default function ShopModal({ isOpen, onClose }) {
 
         {/* Thông tin số xu của người chơi */}
         <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-800/80 px-4 py-2.5">
-          <span className="text-xs text-slate-400">Ví xu của bạn:</span>
+          <span className="text-lg text-slate-400">Ví xu của bạn:</span>
           <div className="flex items-center gap-1.5">
             <span className="text-lg">🪙</span>
-            <span className="text-base font-black text-amber-400">{coins}</span>
-            <span className="text-xs text-amber-400/80">xu</span>
+            <span className="text-2xl font-black text-amber-400">{coins}</span>
+            <span className="text-lg text-amber-400/80">xu</span>
           </div>
         </div>
 
         {isGuest && (
-          <div className="mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-center text-xs text-amber-300">
+          <div className="mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-center text-sm text-amber-300">
             ⚠️ Bạn đang ở chế độ Khách. Đăng nhập để mua và lưu trang phục nhé!
           </div>
         )}
 
         {/* Thông báo thành công / lỗi */}
         {msg && (
-          <div className="mt-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2 text-center text-xs text-emerald-400">
+          <div className="mt-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2 text-center text-sm text-emerald-400">
             {msg}
           </div>
         )}
         {error && (
-          <div className="mt-2 rounded-lg bg-rose-500/10 border border-rose-500/30 p-2 text-center text-xs text-rose-400">
+          <div className="mt-2 rounded-lg bg-rose-500/10 border border-rose-500/30 p-2 text-center text-sm text-rose-400">
             {error}
           </div>
         )}
@@ -101,14 +101,14 @@ export default function ShopModal({ isOpen, onClose }) {
             return (
               <div
                 key={skin.id}
-                className={`flex flex-col gap-3 rounded-xl p-3.5 border transition sm:flex-row sm:items-center sm:justify-between ${
+                className={`rounded-xl p-3.5 border transition ${
                   isActive
                     ? 'border-amber-400 bg-amber-500/10 shadow-md'
                     : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800/70'
                 }`}
               >
-                {/* Xem trước hình dạng và màu sắc của chim */}
-                <div className="flex min-w-0 items-center gap-3">
+                {/* Hàng trên: chim + tên trang phục + nút hành động */}
+                <div className="flex items-center gap-3">
                   <div
                     className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 shadow"
                     style={{ backgroundColor: skin.colors.bird }}
@@ -133,52 +133,57 @@ export default function ShopModal({ isOpen, onClose }) {
                     />
                   </div>
 
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="break-words text-sm font-bold text-white">{skin.name}</h3>
+                      <h3 className="break-words text-base font-bold text-white">{skin.name}</h3>
                       {isActive && (
-                        <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-slate-950">
+                        <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[11px] font-black text-slate-950">
                           ĐANG DÙNG
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 break-words text-xs leading-relaxed text-slate-400">
-                      {skin.description}
-                    </p>
+                  </div>
+
+                  {/* Nút hành động */}
+                  <div className="shrink-0">
+                    {isActive ? (
+                      <button
+                        disabled
+                        className="rounded-lg bg-amber-500/20 px-3 py-1.5 text-sm font-bold text-amber-300 border border-amber-500/40 cursor-default"
+                      >
+                        ✓ Đang Mặc
+                      </button>
+                    ) : isOwned ? (
+                      <button
+                        onClick={() => handleAction(skin)}
+                        disabled={isProcessing}
+                        className="rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 px-3 py-1.5 text-sm font-bold text-white shadow transition cursor-pointer"
+                      >
+                        {isProcessing ? '...' : 'Trang Bị'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAction(skin)}
+                        disabled={isProcessing || (!isGuest && !canAfford)}
+                        className={`rounded-lg px-3 py-1.5 text-sm font-bold shadow transition cursor-pointer ${
+                          canAfford
+                            ? 'bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950'
+                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                        }`}
+                      >
+                        {isProcessing ? '...' : `Mua ${skin.price} Xu`}
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Nút hành động */}
-                <div className="shrink-0 self-end sm:self-auto sm:pl-2">
-                  {isActive ? (
-                    <button
-                      disabled
-                      className="rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-300 border border-amber-500/40 cursor-default"
-                    >
-                      ✓ Đang Mặc
-                    </button>
-                  ) : isOwned ? (
-                    <button
-                      onClick={() => handleAction(skin)}
-                      disabled={isProcessing}
-                      className="rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 px-3 py-1.5 text-xs font-bold text-white shadow transition cursor-pointer"
-                    >
-                      {isProcessing ? '...' : 'Trang Bị'}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleAction(skin)}
-                      disabled={isProcessing || (!isGuest && !canAfford)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-bold shadow transition cursor-pointer ${
-                        canAfford
-                          ? 'bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950'
-                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                      }`}
-                    >
-                      {isProcessing ? '...' : `Mua ${skin.price} Xu`}
-                    </button>
-                  )}
-                </div>
+                {/* Ghi chú về chú chim — luôn nằm trên 1 dòng */}
+                <p
+                  className="mt-1.5 truncate text-[23px] leading-relaxed text-slate-400"
+                  title={skin.description}
+                >
+                  {skin.description}
+                </p>
               </div>
             );
           })}

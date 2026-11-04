@@ -1,7 +1,7 @@
 -- ============================================================
 -- Flappy Bird - Database Schema (MySQL / MariaDB - XAMPP)
 -- Chuyển từ ERD gốc (cú pháp SQL Server) sang MySQL.
--- Cấu trúc khớp 100% ERD: SKINS, USERS, USER_SKINS, GAME_RESULTS.
+-- Cấu trúc: SKINS, USERS (gộp PENDING_REGISTRATIONS), USER_SKINS, GAME_RESULTS.
 --
 -- Khóa chính tự tăng (AUTO_INCREMENT) đều bắt đầu từ 1 và tăng tuần tự
 -- (1, 2, 3, ...) khi import vào database mới.
@@ -24,6 +24,8 @@ CREATE DATABASE IF NOT EXISTS TTTN_FlappyBird
 
 USE TTTN_FlappyBird;
 
+SET NAMES utf8mb4;
+
 -- ============================================
 -- 2. BANG SKINS: DANH MUC TRANG PHUC
 -- ============================================
@@ -42,7 +44,9 @@ CREATE TABLE IF NOT EXISTS SKINS (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 3. BANG USERS: TAI KHOAN NGUOI CHOI
+-- 3. BANG USERS: TAI KHOAN + DANG KY CHO XAC THUC OTP
+--    (gộp PENDING_REGISTRATIONS vào cùng một bảng)
+--    IsVerified = 0: đang chờ OTP, = 1: đã xác thực
 -- ============================================
 CREATE TABLE IF NOT EXISTS USERS (
     UserID        BIGINT       NOT NULL AUTO_INCREMENT,
@@ -51,13 +55,19 @@ CREATE TABLE IF NOT EXISTS USERS (
     GoogleID      VARCHAR(255) NULL,
     CurrentSkinID BIGINT       NULL,
     Coins         INT          NOT NULL DEFAULT 0,
+    IsVerified    TINYINT(1)   NOT NULL DEFAULT 0,
+    OTPHash       VARCHAR(255) NULL,
+    OTPAttempts   INT          NOT NULL DEFAULT 0,
+    OTPExpiresAt  DATETIME(6)  NULL,
+    OTPLastSentAt DATETIME(6)  NULL,
     CreatedAt     DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedAt     DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 
     PRIMARY KEY (UserID),
     UNIQUE KEY uq_users_username (Username),
     UNIQUE KEY uq_users_googleid (GoogleID),
     CONSTRAINT CK_USERS_Coins CHECK (Coins >= 0),
+    CONSTRAINT CK_USERS_IsVerified CHECK (IsVerified IN (0, 1)),
+    CONSTRAINT CK_USERS_OTPAttempts CHECK (OTPAttempts >= 0),
     CONSTRAINT FK_USERS_SKINS FOREIGN KEY (CurrentSkinID)
         REFERENCES SKINS (SkinID)
         ON DELETE SET NULL
@@ -91,6 +101,8 @@ CREATE TABLE IF NOT EXISTS GAME_RESULTS (
 
     PRIMARY KEY (ResultID),
     UNIQUE KEY uq_game_results_user (UserID),
+    KEY IX_GAME_RESULTS_User_Score (UserID, Score DESC),
+    KEY IX_GAME_RESULTS_Score_Time (Score DESC, PlayedAt ASC),
     CONSTRAINT FK_GAME_RESULTS_USERS FOREIGN KEY (UserID)
         REFERENCES USERS (UserID)
         ON DELETE SET NULL,
@@ -99,16 +111,7 @@ CREATE TABLE IF NOT EXISTS GAME_RESULTS (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 6. TAO INDEX CHO TRUY VAN DIEM SO
--- ============================================
-CREATE INDEX IX_GAME_RESULTS_User_Score
-    ON GAME_RESULTS (UserID, Score DESC);
-
-CREATE INDEX IX_GAME_RESULTS_Score_Time
-    ON GAME_RESULTS (Score DESC, PlayedAt ASC);
-
--- ============================================
--- 7. DU LIEU TRANG PHUC MAC DINH VA TRANG PHUC CUA HANG
+-- 6. DU LIEU TRANG PHUC MAC DINH VA TRANG PHUC CUA HANG
 -- ============================================
 INSERT IGNORE INTO SKINS (SkinCode, SkinName, ImageURL, Price)
 VALUES 
