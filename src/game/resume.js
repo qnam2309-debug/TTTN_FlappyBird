@@ -14,7 +14,28 @@ export function restoreRun(g) {
     if (!raw) return false;
     const data = JSON.parse(raw);
     if (Date.now() - data.savedAt > TTL || data.savedAt > Date.now() || data.phase !== 'play' || !Array.isArray(data.pipes) || !data.pipes.length || ![data.y,data.vy,data.scroll,data.t,data.score].every(Number.isFinite)) { clearRun(); return false; }
-    Object.assign(g, {phase:'play', y:data.y, vy:data.vy, scroll:data.scroll, t:data.t, score:data.score, best:Math.max(g.best,Number(data.best)||0), pipes:data.pipes.map(v=>({x:v.x,top:v.top,passed:!!v.passed})), paused:true, newBest:false});
+    Object.assign(g, {
+      phase: 'play',
+      y: data.y,
+      vy: data.vy,
+      scroll: data.scroll,
+      t: data.t,
+      score: data.score,
+      best: Math.max(g.best, Number(data.best) || 0),
+      pipes: data.pipes.map((v) => ({
+        x: v.x,
+        top: v.top,
+        baseTop: v.baseTop ?? v.top,
+        passed: !!v.passed,
+        spike: v.spike || 'none',
+        isMoving: !!v.isMoving,
+        moveAmp: Number(v.moveAmp) || 0,
+        moveSpeed: Number(v.moveSpeed) || 0,
+        movePhase: Number(v.movePhase) || 0,
+      })),
+      paused: true,
+      newBest: false,
+    });
     return true;
   } catch (e) { console.warn('Không khôi phục được ván:',e); clearRun(); return false; }
 }

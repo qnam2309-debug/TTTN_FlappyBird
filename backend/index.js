@@ -59,6 +59,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Backend đang chạy tại http://localhost:${PORT}`);
+  try {
+    const { testConnection } = require("./config/db");
+    await testConnection();
+  } catch (err) {
+    console.error("❌ Lỗi kết nối MySQL:", err.message);
+  }
 });
