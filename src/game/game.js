@@ -3,7 +3,17 @@
 
 import { playDie, playFlap, playHit, playScore } from './sound.js';
 
-export const W = 360, H = 540, GROUND = 470; // Kích thước màn chơi logic (px)
+export const W = 360;
+export let H = 540;
+export let GROUND = 470;
+
+export function setGameHeight(nextHeight) {
+  const height = Math.max(540, Math.min(1100, Math.round(nextHeight)));
+  if (height === H) return false;
+  H = height;
+  GROUND = height - 70;
+  return true;
+} // Kích thước màn chơi logic (px)
 export const BIRD_X = 100, R = 13;           // Vị trí X cố định và bán kính vẽ chú chim
 export const PIPE_W = 58, GAP = 140;         // Độ rộng cột và khoảng hở giữa 2 cột trên/dưới
 export const DT = 1 / 120;                   // Bước nhảy thời gian vật lý cố định (s)

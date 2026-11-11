@@ -11,19 +11,40 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Cấu hình CORS: cho phép domain frontend khi deploy, mặc định mở cho localhost khi dev
+
+
 const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  ? process.env.CORS_ORIGIN.split(",")
+      .map((origin) => origin.trim().replace(/\/$/, ""))
+      .filter(Boolean)
   : [];
-app.use(cors({
-  origin: allowedOrigins.length > 0
-    ? (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin)) cb(null, true);
-        else cb(new Error('Not allowed by CORS'));
+
+// Cho phép ứng dụng Android Capacitor kết nối API
+const capacitorOrigins = [
+  "https://localhost",
+  "http://localhost",
+];
+
+const trustedOrigins = [
+  ...new Set([...allowedOrigins, ...capacitorOrigins]),
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || trustedOrigins.includes(origin)) {
+        return callback(null, true);
       }
-    : true, // Cho phép tất cả khi chưa cấu hình (môi trường dev)
-  credentials: true,
-}));
+
+      console.warn("CORS blocked origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+
 
 // Tài liệu API (Swagger UI) tại http://localhost:5000/api-docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -59,12 +80,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Backend đang chạy tại http://localhost:${PORT}`);
-  try {
-    const { testConnection } = require("./config/db");
-    await testConnection();
-  } catch (err) {
-    console.error("❌ Lỗi kết nối MySQL:", err.message);
-  }
 });

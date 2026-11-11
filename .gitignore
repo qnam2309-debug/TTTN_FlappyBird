@@ -28,3 +28,28 @@ backend/sql/backups/
 *.njsproj
 *.sln
 *.sw?
+
+.env.production
+android/.gradle/
+android/local.properties
+
+# Android build outputs
+android/build/
+android/app/build/
+android/app/release/
+android/.cxx/
+*.apk
+*.aab
+
+# Android signing keys
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# Local configuration and credentials
+.env.development
+.env.test
+.env.staging
+.env.production.*
+google-services.json

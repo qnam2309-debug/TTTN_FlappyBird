@@ -5,14 +5,13 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
-const { authLimiter, otpLimiter } = require('../middleware/rateLimiter');
 
-// Các route công khai (không cần đăng nhập, áp dụng Rate Limiting chống Brute-force & Spam)
-router.post('/register', authLimiter, authController.register);
-router.post('/verify-otp', otpLimiter, authController.verifyOtp);
-router.post('/resend-otp', otpLimiter, authController.resendOtp);
-router.post('/login', authLimiter, authController.login);
-router.post('/google', authLimiter, authController.googleLogin);
+// Các route công khai (không cần đăng nhập)
+router.post('/register', authController.register);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/resend-otp', authController.resendOtp);
+router.post('/login', authController.login);
+router.post('/google', authController.googleLogin);
 router.post('/logout', authController.logout);
 
 // Route cần đăng nhập (bảo vệ bằng middleware auth)

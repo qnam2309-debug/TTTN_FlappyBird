@@ -1,4 +1,7 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://flape-bird.onrender.com/api'
+).replace(/\/+$/, '');
 const TOKEN_KEY = 'flappy_token';
 const USER_KEY = 'flappy_user';
 
@@ -24,11 +27,11 @@ function normalizeUser(user) {
     throw new Error('Máy chủ trả về thông tin người dùng không hợp lệ.');
   }
 
-  const activeSkin = user.currentSkinId || user.activeSkin || 'default';
+  const activeSkin = user.activeSkin || 'default';
   return {
     ...user,
     id: String(user.id),
-    currentSkinId: activeSkin,
+    currentSkinId: user.currentSkinId,
     activeSkin,
     bestScore: Number(user.bestScore) || 0,
   };
@@ -60,7 +63,6 @@ export async function apiRequest(endpoint, options = {}) {
   if (!response.ok) {
     const error = new Error(data?.message || `Yêu cầu API thất bại (${response.status}).`);
     error.status = response.status;
-    if (data?.retryAfter !== undefined) error.retryAfter = data.retryAfter;
     throw error;
   }
   return data;
@@ -78,32 +80,7 @@ async function authenticate(endpoint, username, password) {
 }
 
 export const authApi = {
-  // Đăng ký: backend gửi OTP, chưa đăng nhập ngay
-  register: async (username, password) => {
-    return apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-      authenticated: false,
-    });
-  },
-  // Xác thực OTP: tạo tài khoản + trả token/user
-  verifyOtp: async (email, otp) => {
-    const data = await apiRequest('/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email, otp }),
-      authenticated: false,
-    });
-    const user = normalizeUser(data?.user);
-    saveSession(data?.token, user);
-    return { ...data, token: data.token, user };
-  },
-  resendOtp: async (email) => {
-    return apiRequest('/auth/resend-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-      authenticated: false,
-    });
-  },
+  register: (username, password) => authenticate('/auth/register', username, password),
   login: (username, password) => authenticate('/auth/login', username, password),
   googleLogin: async (credential) => {
     const data = await apiRequest('/auth/google', {
@@ -128,12 +105,16 @@ export const authApi = {
 };
 
 export const gameApi = {
-  submitScore: (score, durationSeconds = 0) => apiRequest('/scores', {
+  submitScore: (score) => apiRequest('/scores', {
     method: 'POST',
-    body: JSON.stringify({ score, durationSeconds: Number(durationSeconds) || 0 }),
+    body: JSON.stringify({ score }),
   }),
   getLeaderboard: (limit = 10) => apiRequest(`/leaderboard?limit=${limit}`, {
     authenticated: false,
+  }),
+  updateCoins: (amount) => apiRequest('/coins', {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
   }),
   buySkin: (skinCode) => apiRequest('/skins/buy', {
     method: 'POST',

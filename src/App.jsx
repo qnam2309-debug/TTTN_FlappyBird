@@ -9,7 +9,7 @@ import AuthModal from './components/AuthModal.jsx';
 import LeaderboardModal from './components/LeaderboardModal.jsx';
 import ShopModal from './components/ShopModal.jsx';
 import AccountModal from './components/AccountModal.jsx';
-import { H, W } from './game/game.js';
+import { H, W, setGameHeight } from './game/game.js';
 import { useGame } from './game/useGame.js';
 
 function GameScreen() {
@@ -21,48 +21,64 @@ function GameScreen() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-
   // Tỉ lệ scale màn hình Canvas
-  const [scale, setScale] = useState(1);
-
+  const [size, setSize] = useState({ width: W, height: H });
   // Lấy dữ liệu tài khoản và trang phục đang mặc
   const { user, activeSkinColors, submitScore } = useAuth();
 
   // Xử lý khi chim chết (kết thúc ván)
-  const handleGameOver = async (finalScore, durationSeconds) => {
+  const handleGameOver = async (finalScore) => {
     try {
-      await submitScore(finalScore, durationSeconds);
+      await submitScore(finalScore);
     } catch (err) {
       console.error('Lỗi lưu điểm:', err);
     }
   };
 
-  const isAnyModalOpen = isAuthOpen || isLeaderboardOpen || isShopOpen || isAccountOpen;
+  // Khởi tạo Game Loop Canvas
+  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver, user?.bestScore);
 
-  // Khởi tạo Game Loop Canvas (tự động tạm dừng game khi có bất kỳ Modal nào đang mở)
-  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver, user?.bestScore, isAnyModalOpen);
-
-  // Tự động tính toán scale màn hình để fit vừa vặn mọi kích thước
+  // Mở rộng chiều cao thế giới game theo màn hình điện thoại
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const observer = new ResizeObserver(() => {
-      const padding = 16;
-      const availableW = el.clientWidth - padding;
-      const availableH = el.clientHeight - padding;
-      const newScale = Math.min(availableW / W, availableH / H, 1.25);
-      setScale(Math.max(newScale, 0.5));
-    });
+
+    const updateGameSize = () => {
+      const availableW = Math.max(1, el.clientWidth - 8);
+      const availableH = Math.max(1, el.clientHeight - 8);
+
+      // Giữ nguyên tỷ lệ chiều ngang
+      const scale = availableW / W;
+
+      // Tính chiều cao thế giới game
+      const desiredHeight = Math.max(
+        540,
+        Math.round(availableH / scale)
+      );
+
+      setGameHeight(desiredHeight);
+
+      // Cập nhật kích thước canvas theo màn hình
+      setSize({
+        width: Math.round(W * scale),
+        height: Math.round(desiredHeight * scale)
+      });
+    };
+
+    const observer = new ResizeObserver(updateGameSize);
     observer.observe(el);
+
+    updateGameSize();
+
     return () => observer.disconnect();
   }, []);
 
   const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-  const playfieldWidth = Math.round(W * scale);
-  const playfieldHeight = Math.round(H * scale);
+  const playfieldWidth = size.width;
+  const playfieldHeight = size.height;
 
   return (
-    <div className="flex h-[100dvh] w-screen flex-col items-center justify-between bg-slate-950 p-2 sm:p-4 select-none touch-none overflow-hidden">
+    <div className="mobile-game-shell flex h-dvh w-screen flex-col items-center justify-start bg-slate-950 p-0 sm:p-4 select-none touch-none overflow-hidden">
       {/* 1. Header trên cùng */}
       <Header
         width={playfieldWidth}
@@ -75,10 +91,10 @@ function GameScreen() {
       {/* 2. Khung chơi Game (Sân khấu trung tâm) */}
       <div
         ref={stageRef}
-        className="flex flex-1 w-full items-center justify-center cursor-pointer"
+        className="mobile-game-stage flex flex-1 min-h-0 w-full items-center justify-center cursor-pointer"
         onPointerDown={(e) => {
-          // Bấm chuột trái hoặc chạm màn hình để bay (chỉ khi không có modal nào mở)
-          if (e.button === 0 && !isAnyModalOpen) flap();
+          // Bấm chuột trái hoặc chạm màn hình để bay
+          if (e.button === 0) flap();
         }}
       >
         <div
@@ -99,8 +115,8 @@ function GameScreen() {
       </div>
 
       {/* 3. Dòng nhắc nhở bên dưới */}
-      <footer className="text-center pb-1">
-        <p className="text-[15px] text-slate-500 font-medium">
+      <footer className="hidden sm:block text-center pb-1">
+        <p className="text-xs text-slate-500 font-medium">
           Chạm vào màn hình hoặc bấm <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">Space</kbd> / <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-slate-300 font-mono">↑</kbd> để đập cánh
         </p>
       </footer>

@@ -1,0 +1,14 @@
+FLAPPY BIRD - SAN CHOI DOC MO RONG
+
+Da sua src/App.jsx va src/game/game.js de thay doi chieu cao the gioi game theo man hinh dien thoai.
+
+Mo thu muc co package.json trong VS Code, sau do chay:
+  npm install
+  npm run android:sync
+  npm run android:open
+
+Trong Android Studio chon vivo V2434 > app > Run.
+
+Luu y: khong chay android:init lai. Neu file .env.production khong co, can cau hinh lai URL backend truoc khi build.
+Dang nhap Google native chua duoc sua trong ban nay.
+Chua kiem thu tren thiet bi that; can kiem tra va cham, vi tri ong va cac man hinh khac.

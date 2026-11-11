@@ -48,8 +48,7 @@ module.exports = {
         type: 'object',
         required: ['score'],
         properties: {
-          score: { type: 'integer', minimum: 0, maximum: 3000, example: 12 },
-          durationSeconds: { type: 'number', minimum: 0, example: 16.5, description: 'Thời gian ván chơi thực tế (giây) phục vụ Anti-Cheat' },
+          score: { type: 'integer', minimum: 0, example: 12 },
         },
       },
       ScoreResponse: {
@@ -417,6 +416,53 @@ module.exports = {
                 schema: { $ref: '#/components/schemas/LeaderboardResponse' },
               },
             },
+          },
+        },
+      },
+    },
+    '/api/coins': {
+      post: {
+        tags: ['Shop'],
+        summary: 'Cập nhật số xu',
+        description: 'Cần JWT. Thêm hoặc trừ xu cho tài khoản đang đăng nhập.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['amount'],
+                properties: {
+                  amount: { type: 'integer', example: 10, description: 'Số xu thay đổi (dương = cộng, âm = trừ)' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Cập nhật xu thành công',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Cập nhật xu thành công!' },
+                    coins: { type: 'integer', example: 60 },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Dữ liệu không hợp lệ',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+          },
+          401: {
+            description: 'Chưa đăng nhập / token không hợp lệ',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
           },
         },
       },

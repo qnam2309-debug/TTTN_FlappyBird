@@ -49,21 +49,12 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
-  // Đăng ký: backend gửi OTP, chưa đăng nhập ngay
+  // Đăng ký qua Backend thật
   const register = async (username, password) => {
     const res = await authApi.register(username, password);
-    return res;
-  };
-
-  // Xác thực OTP đăng ký -> đăng nhập
-  const verifyOtp = async (email, otp) => {
-    const res = await authApi.verifyOtp(email, otp);
     setUser(res.user);
     return res.user;
   };
-
-  // Gửi lại mã OTP
-  const resendOtp = async (email) => authApi.resendOtp(email);
 
   // Đăng nhập/đăng ký bằng Google (credential là ID token do Google trả về)
   const loginWithGoogle = async (credential) => {
@@ -80,13 +71,13 @@ export function AuthProvider({ children }) {
   };
 
   // Gửi điểm sau ván chơi (thưởng coin tự động lưu vào MySQL)
-  const submitScore = async (score, durationSeconds = 0) => {
+  const submitScore = async (score) => {
     if (!user) {
       // Chế độ Guest: chỉ trả về kết quả local
       return { isGuest: true, score };
     }
     try {
-      const res = await gameApi.submitScore(score, durationSeconds);
+      const res = await gameApi.submitScore(score);
       setUser((prev) => ({
         ...prev,
         bestScore: res.bestScore,
@@ -142,8 +133,6 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
-    verifyOtp,
-    resendOtp,
     loginWithGoogle,
     logout,
     submitScore,
