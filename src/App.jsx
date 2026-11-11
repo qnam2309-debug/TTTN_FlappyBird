@@ -29,16 +29,18 @@ function GameScreen() {
   const { user, activeSkinColors, submitScore } = useAuth();
 
   // Xử lý khi chim chết (kết thúc ván)
-  const handleGameOver = async (finalScore) => {
+  const handleGameOver = async (finalScore, durationSeconds) => {
     try {
-      await submitScore(finalScore);
+      await submitScore(finalScore, durationSeconds);
     } catch (err) {
       console.error('Lỗi lưu điểm:', err);
     }
   };
 
-  // Khởi tạo Game Loop Canvas
-  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver, user?.bestScore);
+  const isAnyModalOpen = isAuthOpen || isLeaderboardOpen || isShopOpen || isAccountOpen;
+
+  // Khởi tạo Game Loop Canvas (tự động tạm dừng game khi có bất kỳ Modal nào đang mở)
+  const [hud, flap] = useGame(canvasRef, activeSkinColors, handleGameOver, user?.bestScore, isAnyModalOpen);
 
   // Tự động tính toán scale màn hình để fit vừa vặn mọi kích thước
   useEffect(() => {
@@ -60,7 +62,7 @@ function GameScreen() {
   const playfieldHeight = Math.round(H * scale);
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-between bg-slate-950 p-2 sm:p-4 select-none touch-none overflow-hidden">
+    <div className="flex h-[100dvh] w-screen flex-col items-center justify-between bg-slate-950 p-2 sm:p-4 select-none touch-none overflow-hidden">
       {/* 1. Header trên cùng */}
       <Header
         width={playfieldWidth}
@@ -75,8 +77,8 @@ function GameScreen() {
         ref={stageRef}
         className="flex flex-1 w-full items-center justify-center cursor-pointer"
         onPointerDown={(e) => {
-          // Bấm chuột trái hoặc chạm màn hình để bay
-          if (e.button === 0) flap();
+          // Bấm chuột trái hoặc chạm màn hình để bay (chỉ khi không có modal nào mở)
+          if (e.button === 0 && !isAnyModalOpen) flap();
         }}
       >
         <div

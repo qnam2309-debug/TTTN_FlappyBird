@@ -44,48 +44,49 @@ export default function ShopModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-lg bg-amber-200 pixel-box p-4 sm:p-6 flex flex-col max-h-[85vh]">
         {/* Tiêu đề & Nút đóng */}
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between gap-3 border-b-4 border-black pb-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="shrink-0 text-2xl">🛍️</span>
-            <h2 className="break-words text-base font-bold leading-tight text-amber-400 sm:text-lg">
+            <h2 className="break-words text-lg font-black leading-tight text-black sm:text-xl">
               Cửa Hàng Trang Phục
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            aria-label="Đóng"
+            className="shrink-0 cursor-pointer bg-rose-400 px-2 py-1 text-sm font-black text-black pixel-btn hover:bg-rose-300"
           >
             ✕
           </button>
         </div>
 
         {/* Thông tin số xu của người chơi */}
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-800/80 px-4 py-2.5">
-          <span className="text-lg text-slate-400">Ví xu của bạn:</span>
+        <div className="mt-3 flex items-center justify-between border-2 border-black bg-amber-100 px-3 py-2">
+          <span className="text-sm font-black text-slate-700">Ví xu của bạn:</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-lg">🪙</span>
-            <span className="text-2xl font-black text-amber-400">{coins}</span>
-            <span className="text-lg text-amber-400/80">xu</span>
+            <span className="text-base">🪙</span>
+            <span className="text-xl font-black text-black">{coins}</span>
+            <span className="text-xs font-black text-slate-700">xu</span>
           </div>
         </div>
 
         {isGuest && (
-          <div className="mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-center text-sm text-amber-300">
+          <div className="mt-2 border-2 border-black bg-amber-100 p-2 text-center text-xs font-bold text-slate-800">
             ⚠️ Bạn đang ở chế độ Khách. Đăng nhập để mua và lưu trang phục nhé!
           </div>
         )}
 
         {/* Thông báo thành công / lỗi */}
         {msg && (
-          <div className="mt-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2 text-center text-sm text-emerald-400">
+          <div className="mt-2 border-2 border-black bg-emerald-100 p-2 text-center text-xs font-bold text-emerald-900">
             {msg}
           </div>
         )}
         {error && (
-          <div className="mt-2 rounded-lg bg-rose-500/10 border border-rose-500/30 p-2 text-center text-sm text-rose-400">
+          <div className="mt-2 border-2 border-black bg-rose-100 p-2 text-center text-xs font-bold text-rose-900">
             {error}
           </div>
         )}
@@ -101,43 +102,43 @@ export default function ShopModal({ isOpen, onClose }) {
             return (
               <div
                 key={skin.id}
-                className={`rounded-xl p-3.5 border transition ${
+                className={`p-3 border-2 border-black ${
                   isActive
-                    ? 'border-amber-400 bg-amber-500/10 shadow-md'
-                    : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800/70'
+                    ? 'bg-amber-300 pixel-box shadow-none'
+                    : 'bg-amber-100 hover:bg-amber-50'
                 }`}
               >
                 {/* Hàng trên: chim + tên trang phục + nút hành động */}
                 <div className="flex items-center gap-3">
                   <div
-                    className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-slate-900 shadow"
+                    className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-black shadow-xs"
                     style={{ backgroundColor: skin.colors.bird }}
                   >
                     {/* Cánh chim mini */}
                     <div
-                      className="absolute h-4 w-5 rounded-full border border-slate-900 shadow-xs"
+                      className="absolute h-3.5 w-4.5 rounded-full border border-black shadow-xs"
                       style={{
                         backgroundColor: skin.colors.wing,
-                        left: '6px',
-                        top: '14px',
+                        left: '5px',
+                        top: '12px',
                       }}
                     />
                     {/* Mỏ chim mini */}
                     <div
-                      className="absolute h-2.5 w-2.5 rotate-45 border-r border-b border-slate-900"
+                      className="absolute h-2 w-2 rotate-45 border-r border-b border-black"
                       style={{
                         backgroundColor: skin.colors.beak,
-                        right: '4px',
-                        top: '16px',
+                        right: '3px',
+                        top: '14px',
                       }}
                     />
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="break-words text-base font-bold text-white">{skin.name}</h3>
+                      <h3 className="break-words text-sm font-black text-black sm:text-base">{skin.name}</h3>
                       {isActive && (
-                        <span className="rounded-md bg-amber-400 px-1.5 py-0.5 text-[11px] font-black text-slate-950">
+                        <span className="border border-black bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-black">
                           ĐANG DÙNG
                         </span>
                       )}
@@ -149,7 +150,7 @@ export default function ShopModal({ isOpen, onClose }) {
                     {isActive ? (
                       <button
                         disabled
-                        className="rounded-lg bg-amber-500/20 px-3 py-1.5 text-sm font-bold text-amber-300 border border-amber-500/40 cursor-default"
+                        className="pixel-btn bg-amber-400 px-3 py-1 text-xs font-black text-black cursor-default"
                       >
                         ✓ Đang Mặc
                       </button>
@@ -157,7 +158,7 @@ export default function ShopModal({ isOpen, onClose }) {
                       <button
                         onClick={() => handleAction(skin)}
                         disabled={isProcessing}
-                        className="rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 px-3 py-1.5 text-sm font-bold text-white shadow transition cursor-pointer"
+                        className="pixel-btn bg-sky-400 hover:bg-sky-300 px-3 py-1 text-xs font-black text-black cursor-pointer"
                       >
                         {isProcessing ? '...' : 'Trang Bị'}
                       </button>
@@ -165,10 +166,10 @@ export default function ShopModal({ isOpen, onClose }) {
                       <button
                         onClick={() => handleAction(skin)}
                         disabled={isProcessing || (!isGuest && !canAfford)}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-bold shadow transition cursor-pointer ${
+                        className={`pixel-btn px-3 py-1 text-xs font-black cursor-pointer ${
                           canAfford
-                            ? 'bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                            ? 'bg-emerald-400 hover:bg-emerald-300 text-black'
+                            : 'bg-stone-300 text-stone-500 border-2 border-stone-400 cursor-not-allowed shadow-none'
                         }`}
                       >
                         {isProcessing ? '...' : `Mua ${skin.price} Xu`}
@@ -177,9 +178,9 @@ export default function ShopModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                {/* Ghi chú về chú chim — luôn nằm trên 1 dòng */}
+                {/* Ghi chú về chú chim */}
                 <p
-                  className="mt-1.5 truncate text-[23px] leading-relaxed text-slate-400"
+                  className="mt-1.5 truncate text-xs font-bold text-slate-700"
                   title={skin.description}
                 >
                   {skin.description}

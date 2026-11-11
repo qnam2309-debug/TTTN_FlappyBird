@@ -17,23 +17,56 @@ function readBest() {
   }
 }
 
-const initialBest = readBest();
-const initialGame = newGame(initialBest);
-const restored = restoreRun(initialGame);
-if (!restored && typeof navigator !== 'undefined' && !navigator.onLine) initialGame.paused = true;
+function createInitialGame() {
+  const best = readBest();
+  const g = newGame(best);
+  const restored = restoreRun(g);
+  if (!restored && typeof navigator !== 'undefined' && !navigator.onLine) {
+    g.paused = true;
+  }
+  return { game: g, restored };
+}
 
-export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBestScore = null) {
-  const game = useRef(initialGame);
+export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBestScore = null, isPaused = false) {
+  const [initialData] = useState(() => createInitialGame());
+  const game = useRef(initialData.game);
+
   const [hud, setHud] = useState({
-    phase: initialGame.phase,
-    score: initialGame.score,
-    best: initialGame.best,
-    newBest: initialGame.newBest,
+    phase: initialData.game.phase,
+    score: initialData.game.score,
+    best: initialData.game.best,
+    newBest: initialData.game.newBest,
   });
 
-  const [network, setNetwork] = useState(() => ({offline: typeof navigator !== 'undefined' && !navigator.onLine, countdown: null, restored}));
+  const [network, setNetwork] = useState(() => ({
+    offline: typeof navigator !== 'undefined' && !navigator.onLine,
+    countdown: null,
+    restored: initialData.restored,
+  }));
+
   const onGameOverRef = useRef(onGameOver);
   const activeSkinRef = useRef(activeSkin);
+  const isPausedRef = useRef(isPaused);
+
+  useEffect(() => {
+    onGameOverRef.current = onGameOver;
+    activeSkinRef.current = activeSkin;
+    isPausedRef.current = isPaused;
+  }, [onGameOver, activeSkin, isPaused]);
+
+  // Tự động tạm dừng game khi mở Modal và khôi phục khi đóng Modal
+  useEffect(() => {
+    const g = game.current;
+    if (!g) return;
+    if (isPaused) {
+      g.paused = true;
+      saveRun(g);
+    } else {
+      if (typeof navigator === 'undefined' || navigator.onLine) {
+        g.paused = false;
+      }
+    }
+  }, [isPaused]);
 
   useEffect(() => {
     onGameOverRef.current = onGameOver;
@@ -95,6 +128,21 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
     // Bắt phím Space hoặc Mũi tên lên để đập cánh
     const onKey = (e) => {
       if (e.code !== 'Space' && e.code !== 'ArrowUp') return;
+
+      // Không can thiệp nếu người dùng đang nhập văn bản trong ô input, textarea
+      const target = e.target;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+         target.tagName === 'TEXTAREA' ||
+         target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Không cho bay nếu modal đang mở
+      if (isPausedRef.current) return;
+
       e.preventDefault();
       if (!e.repeat) flap(g);
     };
@@ -123,7 +171,7 @@ export function useGame(canvasRef, activeSkin = null, onGameOver = null, userBes
       // Kích hoạt khi chim chết (chuyển sang 'dead')
       if (lastPhase !== 'dead' && g.phase === 'dead') {
         clearRun();
-        onGameOverRef.current?.(g.score);
+        onGameOverRef.current?.(g.score, g.playDuration || 0);
       }
       lastPhase = g.phase;
 

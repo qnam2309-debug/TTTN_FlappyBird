@@ -4,7 +4,7 @@ const TTL = 24 * 60 * 60 * 1000;
 export function saveRun(g) {
   if (g.phase !== 'play') return;
   try {
-    localStorage.setItem(KEY, JSON.stringify({savedAt: Date.now(), phase: g.phase, y:g.y, vy:g.vy, scroll:g.scroll, t:g.t, score:g.score, best:g.best, pipes:g.pipes}));
+    localStorage.setItem(KEY, JSON.stringify({savedAt: Date.now(), phase: g.phase, y:g.y, vy:g.vy, scroll:g.scroll, t:g.t, score:g.score, best:g.best, pipes:g.pipes, playDuration: g.playDuration || 0}));
   } catch (e) { console.warn('Không lưu được ván:', e); }
 }
 export function clearRun() { try { localStorage.removeItem(KEY); } catch (e) { console.warn(e); } }
@@ -35,6 +35,7 @@ export function restoreRun(g) {
       })),
       paused: true,
       newBest: false,
+      playDuration: Number(data.playDuration) || 0,
     });
     return true;
   } catch (e) { console.warn('Không khôi phục được ván:',e); clearRun(); return false; }

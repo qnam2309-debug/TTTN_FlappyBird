@@ -4,12 +4,28 @@ const Skin = require('../models/Skin');
 
 exports.submitScore = async (req, res, next) => {
   try {
-    const { score } = req.body;
-    if (!Number.isSafeInteger(score) || score < 0 || score > 2147483647) {
+    const { score, durationSeconds } = req.body;
+    if (!Number.isSafeInteger(score) || score < 0 || score > 3000) {
       return res.status(400).json({
         success: false,
-        message: 'Điểm phải là số nguyên không âm hợp lệ.',
+        message: 'Điểm số không hợp lệ (phải là số nguyên từ 0 đến 3000).',
       });
+    }
+
+    // Cơ chế Anti-Cheat: Kiểm tra thời gian ván chơi tối thiểu đối với điểm số > 0
+    if (score > 0) {
+      // Vận tốc cuộn 150px/s, khoảng cách cột 200px -> tối thiểu ~1.33s/ống (cho phép dung sai 0.9s/ống)
+      const minDuration = 1.5 + (score - 1) * 0.9;
+      if (
+        typeof durationSeconds !== 'number' ||
+        !Number.isFinite(durationSeconds) ||
+        durationSeconds < minDuration
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: 'Điểm số không hợp lệ (thời gian chơi không tương xứng với kết quả đạt được).',
+        });
+      }
     }
 
     // Lấy kỷ lục hiện tại của user trong GAME_RESULTS (nếu có)
@@ -50,74 +66,100 @@ exports.submitScore = async (req, res, next) => {
   }
 };
 
-// Cập nhật số xu trực tiếp (thêm hoặc trừ xu)
-exports.updateCoins = async (req, res, next) => {
-  try {
-    const { amount } = req.body;
-    if (!Number.isInteger(amount)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Số xu thay đổi (amount) phải là số nguyên.',
-      });
-    }
-
-    await User.updateCoins(req.user.id, amount);
-    const updatedUser = await User.findById(req.user.id);
-
-    return res.json({
-      success: true,
-      message: 'Cập nhật xu thành công!',
-      coins: updatedUser.Coins,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Mua skin bằng xu lưu vào DB MySQL
+// Mua skin bằng xu lưu vào DB MySQL có bọc Transaction đảm bảo tính toàn vẹn (ACID)
 exports.buySkin = async (req, res, next) => {
-  try {
-    const { skinCode } = req.body;
-    if (!skinCode) {
-      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp mã trang phục!' });
-    }
+  const { skinCode } = req.body;
+  if (!skinCode) {
+    return res.status(400).json({ success: false, message: 'Vui lòng cung cấp mã trang phục!' });
+  }
 
-    const skin = await Skin.findByCode(skinCode);
-    if (!skin) {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // 1. Kiểm tra skin tồn tại
+    const [skinRows] = await connection.execute(
+      'SELECT SkinID, SkinCode, Price FROM SKINS WHERE SkinCode = ? LIMIT 1',
+      [skinCode]
+    );
+    if (skinRows.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ success: false, message: 'Trang phục không tồn tại!' });
     }
+    const skin = skinRows[0];
 
-    const user = await User.findById(req.user.id);
-    const ownedSkins = await User.getOwnedSkins(req.user.id);
+    // 2. Khóa dòng user để kiểm tra số dư xu và chống Race Condition (SELECT ... FOR UPDATE)
+    const [userRows] = await connection.execute(
+      'SELECT UserID, Coins, CurrentSkinID FROM USERS WHERE UserID = ? FOR UPDATE',
+      [req.user.id]
+    );
+    if (userRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Người dùng không tồn tại!' });
+    }
+    const currentUser = userRows[0];
 
-    if (ownedSkins.includes(skinCode)) {
+    // 3. Kiểm tra xem đã sở hữu skin này chưa
+    const [ownedRows] = await connection.execute(
+      'SELECT SkinID FROM USER_SKINS WHERE UserID = ? AND SkinID = ? LIMIT 1',
+      [req.user.id, skin.SkinID]
+    );
+    if (ownedRows.length > 0) {
+      await connection.rollback();
       return res.status(400).json({ success: false, message: 'Bạn đã sở hữu trang phục này!' });
     }
 
-    if (user.Coins < skin.Price) {
+    // 4. Kiểm tra số dư xu
+    if (currentUser.Coins < skin.Price) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không đủ xu! Cần thêm ${skin.Price - user.Coins} xu.`,
+        message: `Không đủ xu! Cần thêm ${skin.Price - currentUser.Coins} xu.`,
       });
     }
 
-    // Trừ xu, thêm vào bảng sở hữu, và trang bị luôn
-    await User.updateCoins(req.user.id, -skin.Price);
-    await User.addOwnedSkin(req.user.id, skin.SkinID);
-    await User.updateCurrentSkin(req.user.id, skin.SkinID);
+    // 5. Trừ xu, lưu quyền sở hữu vào USER_SKINS và trang bị ngay
+    await connection.execute(
+      'UPDATE USERS SET Coins = Coins - ?, CurrentSkinID = ? WHERE UserID = ?',
+      [skin.Price, skin.SkinID, req.user.id]
+    );
+    await connection.execute(
+      'INSERT INTO USER_SKINS (UserID, SkinID) VALUES (?, ?)',
+      [req.user.id, skin.SkinID]
+    );
 
-    const freshUser = await User.findById(req.user.id);
-    const freshOwnedSkins = await User.getOwnedSkins(req.user.id);
+    // 6. Lấy danh sách skin đã sở hữu mới nhất
+    const [allOwnedRows] = await connection.execute(
+      `SELECT SKINS.SkinCode
+       FROM USER_SKINS
+       JOIN SKINS ON USER_SKINS.SkinID = SKINS.SkinID
+       WHERE USER_SKINS.UserID = ?`,
+      [req.user.id]
+    );
+    const ownedSkins = allOwnedRows.map((r) => r.SkinCode);
+
+    // 7. Hoàn tất giao dịch (Commit)
+    await connection.commit();
 
     return res.json({
       success: true,
       message: 'Mua trang phục thành công!',
-      coins: freshUser.Coins,
+      coins: currentUser.Coins - skin.Price,
       activeSkin: skinCode,
-      ownedSkins: freshOwnedSkins,
+      ownedSkins,
     });
   } catch (err) {
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackErr) {
+        console.error('Lỗi khi rollback transaction:', rollbackErr);
+      }
+    }
     next(err);
+  } finally {
+    if (connection) connection.release();
   }
 };
 

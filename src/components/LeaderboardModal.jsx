@@ -41,36 +41,37 @@ export default function LeaderboardModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md bg-amber-200 pixel-box p-4 sm:p-6 flex flex-col max-h-[85vh]">
         {/* Tiêu đề & Nút đóng */}
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between gap-3 border-b-4 border-black pb-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="shrink-0 text-2xl">🏆</span>
-            <h2 className="break-words text-base font-bold leading-tight text-amber-400 sm:text-lg">
+            <h2 className="break-words text-lg font-black leading-tight text-black sm:text-xl">
               Bảng Xếp Hạng
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            aria-label="Đóng"
+            className="shrink-0 cursor-pointer bg-rose-400 px-2 py-1 text-sm font-black text-black pixel-btn hover:bg-rose-300"
           >
             ✕
           </button>
         </div>
 
         {/* Nội dung danh sách */}
-        <div className="mt-4 flex-1 overflow-y-auto space-y-2 pr-1">
+        <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1">
           {loading ? (
-            <div className="py-12 text-center text-slate-400 text-base">
+            <div className="py-10 text-center font-bold text-slate-700 text-sm">
               Đang tải bảng xếp hạng...
             </div>
           ) : loadError ? (
-            <div className="py-12 text-center text-rose-400 text-base">
+            <div className="py-10 text-center font-bold text-rose-700 text-sm">
               {loadError}
             </div>
           ) : leaderboard.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-base">
+            <div className="py-10 text-center font-bold text-slate-700 text-sm">
               Chưa có dữ liệu bảng xếp hạng.
             </div>
           ) : (
@@ -79,38 +80,38 @@ export default function LeaderboardModal({ isOpen, onClose }) {
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 transition sm:px-4 ${
+                  className={`flex items-center justify-between gap-3 px-3 py-2 border-2 border-black ${
                     isCurrentUser
-                      ? 'border border-amber-400/50 bg-amber-500/15'
-                      : 'border border-slate-800 bg-slate-800/40 hover:bg-slate-800/70'
+                      ? 'bg-amber-300 pixel-box shadow-none'
+                      : 'bg-amber-100 hover:bg-amber-50'
                   }`}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-black text-base ${
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center font-black text-xs border border-black ${
                         item.rank === 1
-                          ? 'bg-amber-400 text-slate-950 shadow-md'
+                          ? 'bg-amber-400 text-black'
                           : item.rank === 2
-                          ? 'bg-slate-300 text-slate-950'
+                          ? 'bg-slate-300 text-black'
                           : item.rank === 3
-                          ? 'bg-amber-700 text-amber-100'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-white text-slate-800'
                       }`}
                     >
                       {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
                     </span>
                     <div className="min-w-0">
-                      <p className="break-words text-base font-bold leading-tight text-white">
+                      <p className="truncate text-xs font-black text-black sm:text-sm">
                         {item.username}{' '}
                         {isCurrentUser && (
-                          <span className="text-sm font-normal text-amber-400">(Bạn)</span>
+                          <span className="text-[11px] font-black text-amber-800">(Bạn)</span>
                         )}
                       </p>
                     </div>
                   </div>
                   <div className="shrink-0 whitespace-nowrap text-right">
-                    <span className="text-lg font-black text-amber-400 sm:text-xl">{item.bestScore}</span>
-                    <span className="ml-1 text-[12px] text-slate-400 sm:text-base">điểm</span>
+                    <span className="text-base font-black text-black sm:text-lg">{item.bestScore}</span>
+                    <span className="ml-1 text-[11px] font-bold text-slate-700">điểm</span>
                   </div>
                 </div>
               );
@@ -120,8 +121,8 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
         {/* Thông báo nếu là Guest */}
         {isGuest && (
-          <div className="mt-4 rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-center">
-            <p className="text-sm text-amber-300">
+          <div className="mt-3 border-2 border-black bg-amber-100 p-2.5 text-center">
+            <p className="text-xs font-bold text-slate-800">
               💡 Bạn đang chơi ở chế độ <b>Khách</b>. Hãy đăng nhập để lưu điểm kỷ lục và tranh hạng cùng các cao thủ!
             </p>
           </div>

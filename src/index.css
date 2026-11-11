@@ -7,9 +7,11 @@
 html, body, #root {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   /* Handjet hỗ trợ tiếng Việt; Press Start 2P chỉ dùng cho logo ASCII */
   font-family: 'Handjet', 'Press Start 2P', ui-monospace, monospace;
 }

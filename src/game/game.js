@@ -13,8 +13,8 @@ const GRAVITY = 1500, FLAP = -430, MAX_FALL = 700, SPEED = 150; // Vận tốc &
 const SPACING = 200;                         // Khoảng cách giữa các đợt cột
 export const RESTART_LOCK = 500;             // Thời gian khóa (ms) sau khi chết trước khi cho chơi lại
 
-export const SCORE_SPIKES_THRESHOLD = 40;    // Mốc xuất hiện gai nhọn (>= 40 điểm)
-export const SCORE_MOVING_THRESHOLD = 60;    // Mốc xuất hiện cột di chuyển lên xuống (>= 60 điểm)
+export const SCORE_SPIKES_THRESHOLD = 2;    // Mốc xuất hiện gai nhọn (>= 40 điểm)
+export const SCORE_MOVING_THRESHOLD = 5;    // Mốc xuất hiện cột di chuyển lên xuống (>= 60 điểm)
 export const SPIKE_H = 18;                   // Chiều cao gai nhọn (px)
 
 // Tạo ngẫu nhiên độ cao và thuộc tính đặc biệt của cột (gai nhọn, di chuyển lên xuống)
@@ -54,10 +54,11 @@ export const reset = (g) =>
     pipes: [],
     score: 0,
     newBest: false,
+    playDuration: 0,
   });
 
 // Khởi tạo một game mới
-export const newGame = (best = 0) => reset({ best, t: 0, scroll: 0 });
+export const newGame = (best = 0) => reset({ best, t: 0, scroll: 0, playDuration: 0 });
 
 // Thuật toán kiểm tra va chạm giữa hình tròn (chim) và hình chữ nhật (cột)
 export function hits(cx, cy, r, x, y, w, h) {
@@ -76,6 +77,7 @@ export function flap(g) {
   if (g.phase === 'ready') {
     g.phase = 'play';
     g.pipes = [newPipe(W + 100, g.score)];
+    g.playDuration = 0;
   }
   g.vy = FLAP;
   playFlap();
@@ -119,6 +121,7 @@ export function step(g, dt, calm = false) {
   }
 
   if (g.phase === 'play') {
+    g.playDuration = (g.playDuration || 0) + dt;
     g.scroll += SPEED * dt;
     // Di chuyển cột và tính điểm khi vượt qua
     for (const p of g.pipes) {

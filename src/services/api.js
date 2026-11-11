@@ -128,16 +128,12 @@ export const authApi = {
 };
 
 export const gameApi = {
-  submitScore: (score) => apiRequest('/scores', {
+  submitScore: (score, durationSeconds = 0) => apiRequest('/scores', {
     method: 'POST',
-    body: JSON.stringify({ score }),
+    body: JSON.stringify({ score, durationSeconds: Number(durationSeconds) || 0 }),
   }),
   getLeaderboard: (limit = 10) => apiRequest(`/leaderboard?limit=${limit}`, {
     authenticated: false,
-  }),
-  updateCoins: (amount) => apiRequest('/coins', {
-    method: 'POST',
-    body: JSON.stringify({ amount }),
   }),
   buySkin: (skinCode) => apiRequest('/skins/buy', {
     method: 'POST',

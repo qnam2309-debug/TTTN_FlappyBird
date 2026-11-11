@@ -80,13 +80,13 @@ export function AuthProvider({ children }) {
   };
 
   // Gửi điểm sau ván chơi (thưởng coin tự động lưu vào MySQL)
-  const submitScore = async (score) => {
+  const submitScore = async (score, durationSeconds = 0) => {
     if (!user) {
       // Chế độ Guest: chỉ trả về kết quả local
       return { isGuest: true, score };
     }
     try {
-      const res = await gameApi.submitScore(score);
+      const res = await gameApi.submitScore(score, durationSeconds);
       setUser((prev) => ({
         ...prev,
         bestScore: res.bestScore,
