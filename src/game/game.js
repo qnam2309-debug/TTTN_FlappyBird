@@ -20,7 +20,7 @@ export const DT = 1 / 120;                   // Bước nhảy thời gian vật
 
 const HIT_R = 11;                            // Bán kính va chạm (nhỏ hơn hình vẽ 1 chút để chơi công bằng hơn)
 const GRAVITY = 1500, FLAP = -430, MAX_FALL = 700, SPEED = 150; // Vận tốc & gia tốc (px/s)
-const SPACING = 200;                         // Khoảng cách giữa các đợt cột
+const SPACING = 240;                         // Khoảng cách giữa các đợt cột
 export const RESTART_LOCK = 500;             // Thời gian khóa (ms) sau khi chết trước khi cho chơi lại
 
 export const SCORE_SPIKES_THRESHOLD = 2;    // Mốc xuất hiện gai nhọn (>= 40 điểm)
